@@ -282,7 +282,7 @@ function LoginScreen() {
             Contact your advisor if you need access.
           </div>
         </div>
-        <div style={{ textAlign: 'center', fontSize: 10, color: C.dim, marginTop: 18 }}>🔒 Secured by Firebase Auth · SEBI Compliant</div>
+        <div style={{ textAlign: 'center', fontSize: 10, color: C.dim, marginTop: 18 }}>🔒 Secured by Anand Finco : SEBI Compliant</div>
       </div>
     </div>
   )
