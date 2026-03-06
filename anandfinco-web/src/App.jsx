@@ -135,7 +135,7 @@ function Toast({ msg, type='success', onDone }) {
 function Sheet({ show, onClose, title, children }) {
   if (!show) return null
   return (
-    <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.85)', zIndex:500, display:'flex', alignItems:'flex-end' }}>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:800, display:'flex', alignItems:'flex-end' }}>
       <div style={{ width:'100%', background:'#0a1628', borderTopLeftRadius:24, borderTopRightRadius:24,
         border:`1px solid ${C.border}`, maxHeight:'94%', overflowY:'auto', paddingBottom:28 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
@@ -259,23 +259,24 @@ function LoginScreen({ onLogin }) {
 // ── SELL FLOW ──────────────────────────────────────────────────────────────
 function SellFlow({ holding, adminPhone, onClose, onSuccess }) {
   const [step,    setStep]  = useState('amount')
-  const [lots,    setLots]  = useState(1)
-  const [askVal,  setAskVal]= useState(String(holding.currentValuation || holding.valuation || 0))
+  const [sellPct, setSellPct] = useState(100) // % of stake to sell: 25, 50, 75, 100
+  const [askVal,  setAskVal]= useState(String(holding.currentValuation || 0))
   const [reason,  setReason]= useState('')
   const [bank,    setBank]  = useState({ accountName:'', accountNo:'', confirmNo:'', ifsc:'', bankName:'', accountType:'savings' })
   const [errors,  setErrors]= useState({})
   const [loading, setL]     = useState(false)
 
-  const maxLots    = Math.max(1, Math.floor((holding.stake || 1) / (holding.lotSize || 0.5)))
-  const sellStake  = lots * (holding.lotSize || 0.5)
-  const askValNum  = parseInt(askVal) || 0
-  const stakeRatio = sellStake / (holding.stake || 1)
-  const sellValue  = stakeRatio * askValNum
-  const buyValue   = stakeRatio * (holding.buyValuation || 0)
-  const gainLoss   = sellValue - buyValue
-  const gainPct    = buyValue > 0 ? (gainLoss / buyValue * 100) : 0
-  const currVal    = ((holding.stake || 1) / 100) * (holding.currentValuation || holding.valuation || 0)
-  const investedVal= ((holding.stake || 1) / 100) * (holding.buyValuation || 0)
+  const totalStake  = holding.stake || 0
+  const sellStake   = parseFloat(((totalStake * sellPct) / 100).toFixed(6))
+  const askValNum   = parseInt(askVal) || 0
+  const stakeRatio  = sellPct / 100
+  const sellValue   = stakeRatio * (askValNum * totalStake / 100)   // payout = (stake%/100) * valuation
+  const invested    = holding.investedAmount || 0
+  const sellCost    = stakeRatio * invested
+  const gainLoss    = sellValue - sellCost
+  const gainPct     = sellCost > 0 ? (gainLoss / sellCost * 100) : 0
+  const currVal     = (totalStake / 100) * (holding.currentValuation || 0)
+  const investedVal = invested
 
   function validateBank() {
     const e = {}
@@ -297,7 +298,7 @@ function SellFlow({ holding, adminPhone, onClose, onSuccess }) {
         holdingId:      holding.id || '',
         companyName:    holding.companyName || holding.company || '',
         sector:         holding.sector || '',
-        lotsToSell:     lots,
+        sellPercent:    sellPct,
         stakeToSell:    sellStake,
         askingValuation:askValNum,
         expectedPayout: sellValue,
@@ -320,7 +321,7 @@ function SellFlow({ holding, adminPhone, onClose, onSuccess }) {
           `🔔 *Sell Request – Anand Finco*\n\n` +
           `Client: ${auth.currentUser?.email}\n` +
           `Company: ${holding.companyName || holding.company}\n` +
-          `Lots: ${lots} (${sellStake}% stake)\n` +
+          `Selling: ${sellPct}% of stake (${sellStake}%)\n` +
           `Asking Valuation: ${fmtCr(askValNum)}\n` +
           `*Expected Payout: ${fmt(sellValue)}*\n\nPlease review in app.`
         )
@@ -374,13 +375,13 @@ function SellFlow({ holding, adminPhone, onClose, onSuccess }) {
                 <div style={{ fontSize:15, fontWeight:900, color:C.text }}>{holding.companyName || holding.company}</div>
                 <div style={{ fontSize:11, color:C.muted, marginTop:3 }}>{holding.sector} · {holding.stake}% total stake</div>
               </div>
-              <Badge label={`${gainPct>=0?'+':''}${pct(currVal,investedVal)}%`} color={gc(currVal-investedVal)} />
+              <Badge label={`${(currVal-investedVal)>=0?'+':''}${pct(currVal,investedVal)}%`} color={gc(currVal-investedVal)} />
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
               {[
-                ['You Invested',  fmt(investedVal),                    C.text2],
-                ['Current Value', fmt(currVal),                        C.gold],
-                ['Unrealised P&L',(currVal-investedVal>=0?'+':'')+fmt(currVal-investedVal), gc(currVal-investedVal)],
+                ['You Invested',  fmt(investedVal),                                              C.text2],
+                ['Current Value', fmt(currVal),                                                  C.gold],
+                ['Unrealised P&L',(currVal-investedVal>=0?'+':'')+fmt(currVal-investedVal),      gc(currVal-investedVal)],
               ].map(([l,v,c]) => (
                 <div key={l} style={{ background:'rgba(0,0,0,0.3)', borderRadius:10, padding:'9px 10px' }}>
                   <SLabel text={l}/><div style={{ fontSize:12, fontWeight:800, color:c }}>{v}</div>
@@ -389,42 +390,37 @@ function SellFlow({ holding, adminPhone, onClose, onSuccess }) {
             </div>
           </div>
 
-          {/* Lot selector */}
+          {/* Stake % selector */}
           <div style={{ marginBottom:18 }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-              <label style={{ fontSize:10, color:C.muted, textTransform:'uppercase', letterSpacing:0.8, fontWeight:700 }}>Lots to Sell</label>
-              <div style={{ fontSize:10, color:C.muted }}>Max {maxLots} lot{maxLots!==1?'s':''} ({holding.lotSize||0.5}% each)</div>
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-              <button onClick={()=>setLots(l=>Math.max(1,l-1))}
-                style={{ width:40, height:40, borderRadius:11, background:'rgba(255,255,255,0.07)',
-                  border:`1px solid ${C.border}`, color:C.text, fontSize:20,
-                  cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'inherit', flexShrink:0 }}>−</button>
-              <div style={{ flex:1, background:'rgba(255,255,255,0.05)', border:`2px solid ${C.gold}88`,
-                borderRadius:12, padding:'12px', textAlign:'center' }}>
-                <div style={{ fontSize:26, fontWeight:900, color:C.gold }}>{lots}</div>
-                <div style={{ fontSize:10, color:C.muted, marginTop:2 }}>lot{lots!==1?'s':''} = {sellStake.toFixed(2)}% stake</div>
-              </div>
-              <button onClick={()=>setLots(l=>Math.min(maxLots,l+1))}
-                style={{ width:40, height:40, borderRadius:11, background:'rgba(255,255,255,0.07)',
-                  border:`1px solid ${C.border}`, color:C.text, fontSize:20,
-                  cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'inherit', flexShrink:0 }}>+</button>
-            </div>
-            <div style={{ display:'flex', justifyContent:'center', gap:6, marginTop:8 }}>
-              {Array.from({length:maxLots},(_,i)=>i+1).map(n => (
-                <button key={n} onClick={()=>setLots(n)}
-                  style={{ width:28, height:28, borderRadius:8,
-                    background:lots===n?`linear-gradient(135deg,${C.gold},${C.goldL})`:'rgba(255,255,255,0.06)',
-                    border:`1px solid ${lots===n?'transparent':C.border}`,
-                    color:lots===n?'#060d18':C.muted,
-                    fontSize:11, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>{n}</button>
+            <label style={{ fontSize:10, color:C.muted, textTransform:'uppercase', letterSpacing:0.8, fontWeight:700, display:'block', marginBottom:10 }}>
+              How much stake to sell?
+            </label>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:8 }}>
+              {[25, 50, 75, 100].map(p => (
+                <button key={p} onClick={()=>setSellPct(p)}
+                  style={{ background:sellPct===p?`linear-gradient(135deg,${C.red},${C.red}bb)`:'rgba(255,255,255,0.06)',
+                    border:`1.5px solid ${sellPct===p?'transparent':C.border}`,
+                    borderRadius:11, padding:'12px 6px', cursor:'pointer', fontFamily:'inherit',
+                    display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                  <div style={{ fontSize:16, fontWeight:900, color:sellPct===p?'#fff':C.text }}>{p}%</div>
+                  <div style={{ fontSize:9, color:sellPct===p?'rgba(255,255,255,0.7)':C.muted }}>
+                    {parseFloat(((totalStake*p)/100).toFixed(4))}% stake
+                  </div>
+                </button>
               ))}
+            </div>
+            <div style={{ background:'rgba(255,255,255,0.04)', border:`1px solid ${C.border}`,
+              borderRadius:10, padding:'10px 14px', marginTop:10, textAlign:'center' }}>
+              <span style={{ fontSize:12, color:C.muted }}>Selling </span>
+              <span style={{ fontSize:14, fontWeight:900, color:C.gold }}>{sellPct}%</span>
+              <span style={{ fontSize:12, color:C.muted }}> of your stake = </span>
+              <span style={{ fontSize:14, fontWeight:900, color:C.text }}>{sellStake}%</span>
             </div>
           </div>
 
           <Field label="Asking Company Valuation (₹)" value={askVal} onChange={setAskVal}
-            type="number" placeholder={String(holding.currentValuation||holding.valuation||0)}
-            note={`Current valuation: ${fmtCr(holding.currentValuation||holding.valuation||0)}`} />
+            type="number" placeholder={String(holding.currentValuation||0)}
+            note={`Current valuation: ${fmtCr(holding.currentValuation||0)} · Set your asking price`} />
 
           {/* Payout calc */}
           <div style={{ background:gainLoss>=0?C.greenBg:C.redBg,
@@ -434,10 +430,10 @@ function SellFlow({ holding, adminPhone, onClose, onSuccess }) {
               Expected Payout Breakdown
             </div>
             {[
-              ['Selling',          `${lots} lot${lots>1?'s':''} (${sellStake.toFixed(2)}% stake)`, C.text],
-              ['Cost of Stake',    fmt(buyValue),   C.text2],
-              ['At Your Valuation',fmtCr(askValNum),C.text2],
-              ['Expected Payout',  fmt(sellValue),  C.gold],
+              ['Selling',           `${sellPct}% of your stake (${sellStake}%)`, C.text],
+              ['Your Cost (portion)',fmt(sellCost),                               C.text2],
+              ['At Your Valuation', fmtCr(askValNum),                            C.text2],
+              ['Expected Payout',   fmt(sellValue),                              C.gold],
             ].map(([l,v,c]) => (
               <div key={l} style={{ display:'flex', justifyContent:'space-between', marginBottom:7 }}>
                 <span style={{ fontSize:11, color:C.muted }}>{l}</span>
@@ -545,8 +541,7 @@ function SellFlow({ holding, adminPhone, onClose, onSuccess }) {
             <div style={{ fontSize:11, fontWeight:800, color:C.gold, marginBottom:12, textTransform:'uppercase', letterSpacing:0.5 }}>📊 Sell Summary</div>
             {[
               ['Company',       holding.companyName||holding.company],
-              ['Lots Selling',  `${lots} lot${lots>1?'s':''}`],
-              ['Stake Selling', `${sellStake.toFixed(2)}% of ${holding.stake}%`],
+              ['Stake Selling', `${sellPct}% of your holding (${sellStake}%)`],
               ['Asking Val.',   fmtCr(askValNum)],
               ['Expected Payout',fmt(sellValue)],
               ['Est. Profit/Loss',`${gainLoss>=0?'+':''}${fmt(gainLoss)} (${gainLoss>=0?'+':''}${gainPct.toFixed(1)}%)`],
@@ -752,24 +747,31 @@ function PortfolioScreen({ clientData, adminPhone }) {
 
   const holdings = portfolioData?.holdings || []
 
-  const totInvested = holdings.reduce((s,h) => s + (h.investedAmount||0), 0)
-  const totCurrent  = holdings.reduce((s,h) => {
+  // Use investedAmount if set, else calculate from stake × buyValuation
+  const totInvested = holdings.reduce((s,h) => {
+    const inv = h.investedAmount > 0 ? h.investedAmount : ((h.stake||0)/100)*(h.buyValuation||0)
+    return s + inv
+  }, 0)
+  const totCurrent = holdings.reduce((s,h) => {
     const co = companies[h.companyId]
-    if (!co) return s + (h.investedAmount||0)
-    return s + ((h.stake||0)/100)*(co.valuation||0)
+    const liveVal = co?.valuation || h.buyValuation || 0
+    return s + ((h.stake||0)/100)*liveVal
   }, 0)
   const totGain = totCurrent - totInvested
   const totPct  = totInvested > 0 ? totGain/totInvested*100 : 0
 
   function getHoldingWithCompany(h) {
     const co = companies[h.companyId] || {}
+    const liveVal = co.valuation || h.buyValuation || 0
+    const invested = h.investedAmount > 0 ? h.investedAmount : ((h.stake||0)/100)*(h.buyValuation||0)
     return {
       ...h,
-      companyName:        co.name || h.companyName || 'Unknown',
-      sector:             co.sector || h.sector || '—',
-      currentValuation:   co.valuation || h.buyValuation || 0,
-      buyValuation:       h.buyValuation || 0,
-      lotSize:            h.lotSize || 0.5,
+      companyName:      co.name || h.companyName || 'Unknown',
+      sector:           co.sector || h.sector || '—',
+      currentValuation: liveVal,
+      buyValuation:     h.buyValuation || liveVal,
+      investedAmount:   invested,
+      lotSize:          h.lotSize || 0.5,
     }
   }
 
@@ -807,17 +809,17 @@ function PortfolioScreen({ clientData, adminPhone }) {
       <div style={{ flex:1, overflowY:'auto', padding:'14px 18px 30px' }}>
         {loading && <div style={{ textAlign:'center', padding:'30px 0', color:C.muted }}>Loading portfolio…</div>}
 
-        {!loading && holdings.length === 0 && pending.length === 0 && (
+        {!loading && holdings.length === 0 && (
           <Empty icon="📊" title="No holdings yet" sub="Invest in unlisted stocks from the Home tab. Your portfolio will appear here once admin approves." />
         )}
 
         {!loading && holdings.map((h) => {
-          const hc       = getHoldingWithCompany(h)
-          const currVal  = (hc.stake/100)*hc.currentValuation
-          const buyVal   = (hc.stake/100)*hc.buyValuation
-          const gain     = currVal - buyVal
-          const gainP    = buyVal > 0 ? gain/buyVal*100 : 0
-          const isOpen   = selected?.id === h.id
+          const hc      = getHoldingWithCompany(h)
+          const currVal = (hc.stake/100)*hc.currentValuation
+          const buyVal  = hc.investedAmount   // use actual invested amount
+          const gain    = currVal - buyVal
+          const gainP   = buyVal > 0 ? gain/buyVal*100 : 0
+          const isOpen  = selected?.id === h.id
 
           return (
             <div key={h.id} style={{ marginBottom:12 }}>
@@ -834,7 +836,7 @@ function PortfolioScreen({ clientData, adminPhone }) {
                     <div style={{ flex:1 }}>
                       <div style={{ fontSize:14, fontWeight:800, color:C.text }}>{hc.companyName}</div>
                       <div style={{ fontSize:10, color:C.muted, marginTop:2 }}>
-                        {hc.sector} · {hc.stake}% stake · {Math.floor(hc.stake/(hc.lotSize||0.5))} lots
+                        {hc.sector} · {hc.stake}% stake
                       </div>
                     </div>
                   </div>
@@ -845,9 +847,9 @@ function PortfolioScreen({ clientData, adminPhone }) {
                 </div>
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginTop:12 }}>
                   {[
-                    ['Invested', fmt(buyVal),  C.text2],
-                    ['P&L',      (gain>=0?'+':'')+fmt(gain), gc(gain)],
-                    ['Valuation',fmtCr(hc.currentValuation), C.gold],
+                    ['Invested',  fmt(buyVal),                              C.text2],
+                    ['P&L',       (gain>=0?'+':'')+fmt(gain),               gc(gain)],
+                    ['Valuation', fmtCr(hc.currentValuation)+' 🔴 LIVE',    C.gold],
                   ].map(([l,v,c]) => (<div key={l}><SLabel text={l}/><div style={{ fontSize:11, fontWeight:700, color:c }}>{v}</div></div>))}
                 </div>
                 <div style={{ textAlign:'center', marginTop:10, fontSize:10, color:C.muted }}>
@@ -889,13 +891,13 @@ function PortfolioScreen({ clientData, adminPhone }) {
                     <div style={{ fontSize:10, color:C.muted, fontWeight:700, textTransform:'uppercase', letterSpacing:0.5, marginBottom:10 }}>Holding Details</div>
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
                       {[
-                        ['Stake',         `${hc.stake}%`],
-                        ['Lot Size',      `${hc.lotSize||0.5}% / lot`],
-                        ['Total Lots',    `${Math.floor(hc.stake/(hc.lotSize||0.5))}`],
-                        ['Buy Valuation', fmtCr(hc.buyValuation)],
-                        ['Now Valuation', fmtCr(hc.currentValuation)],
-                        ['Since',         h.joinDate||'—'],
-                      ].map(([l,v]) => (<div key={l}><SLabel text={l}/><div style={{ fontSize:11, fontWeight:700, color:C.text2 }}>{v}</div></div>))}
+                        ['Your Stake',     `${hc.stake}%`],
+                        ['Amount Invested',fmt(hc.investedAmount)],
+                        ['Buy Valuation',  fmtCr(hc.buyValuation)],
+                        ['Live Valuation', fmtCr(hc.currentValuation)],
+                        ['Unrealised P&L', (gain>=0?'+':'')+fmt(gain)],
+                        ['Since',          h.joinDate||'—'],
+                      ].map(([l,v]) => (<div key={l}><SLabel text={l}/><div style={{ fontSize:11, fontWeight:700, color:l==='Unrealised P&L'?gc(gain):l==='Live Valuation'?C.gold:C.text2 }}>{v}</div></div>))}
                     </div>
                   </div>
                 </div>
@@ -929,10 +931,11 @@ function PortfolioScreen({ clientData, adminPhone }) {
 
 // ── BUY MORE FLOW ──────────────────────────────────────────────────────────
 function BuyMoreFlow({ holding, adminPhone, clientData, onClose }) {
-  const [lots, setLots] = useState(1)
-  const [done, setDone] = useState(false)
-  const [loading, setL] = useState(false)
-  const price = (lots * (holding.lotSize||0.5) / 100) * (holding.currentValuation||0)
+  const [pct,     setPct]  = useState(50) // % of current stake to add
+  const [done,    setDone] = useState(false)
+  const [loading, setL]    = useState(false)
+  const addStake = parseFloat(((holding.stake||0) * pct / 100).toFixed(6))
+  const price    = (addStake / 100) * (holding.currentValuation||0)
 
   async function submit() {
     setL(true)
@@ -943,14 +946,14 @@ function BuyMoreFlow({ holding, adminPhone, clientData, onClose }) {
         clientName:clientData?.name||'', clientPhone:clientData?.phone||'',
         companyId:holding.companyId||'', companyName:holding.companyName||holding.company||'',
         sector:holding.sector||'',
-        lotsToAdd:lots, stakeToAdd:lots*(holding.lotSize||0.5),
+        addPercent:pct, stakeToAdd:addStake,
         currentValuation:holding.currentValuation||0,
         estimatedInvestment:price,
         timestamp:Timestamp.now(), status:'pending', read:false,
       })
       const clean = (adminPhone||'').replace(/\D/g,'')
       if (clean) {
-        const msg = encodeURIComponent(`🔔 *Buy More Request – Anand Finco*\n\nClient: ${clientData?.name||auth.currentUser?.email}\nCompany: ${holding.companyName}\nLots: ${lots} (+${(lots*(holding.lotSize||0.5)).toFixed(2)}%)\nValuation: ${fmtCr(holding.currentValuation||0)}\n*Est. Investment: ${fmt(price)}*`)
+        const msg = encodeURIComponent(`🔔 *Buy More Request – Anand Finco*\n\nClient: ${clientData?.name||auth.currentUser?.email}\nCompany: ${holding.companyName}\nAdding: ${pct}% more (+${addStake}% stake)\nValuation: ${fmtCr(holding.currentValuation||0)}\n*Est. Investment: ${fmt(price)}*`)
         window.open(`https://wa.me/${clean}?text=${msg}`,'_blank')
       }
       setDone(true)
@@ -974,19 +977,29 @@ function BuyMoreFlow({ holding, adminPhone, clientData, onClose }) {
         <div style={{ fontSize:14, fontWeight:900, color:C.text, marginBottom:4 }}>{holding.companyName}</div>
         <div style={{ fontSize:11, color:C.muted }}>Current stake: {holding.stake}% · Valuation: {fmtCr(holding.currentValuation||0)}</div>
       </div>
+
       <div style={{ marginBottom:18 }}>
-        <div style={{ fontSize:10, color:C.muted, textTransform:'uppercase', letterSpacing:0.8, marginBottom:8 }}>Additional Lots</div>
-        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-          <button onClick={()=>setLots(l=>Math.max(1,l-1))} style={{ width:40,height:40,borderRadius:11,background:'rgba(255,255,255,0.07)',border:`1px solid ${C.border}`,color:C.text,fontSize:20,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'inherit',flexShrink:0 }}>−</button>
-          <div style={{ flex:1,background:'rgba(255,255,255,0.05)',border:`2px solid ${C.green}88`,borderRadius:12,padding:'13px',textAlign:'center' }}>
-            <div style={{ fontSize:26,fontWeight:900,color:C.green }}>{lots}</div>
-            <div style={{ fontSize:10,color:C.muted,marginTop:2 }}>lot{lots>1?'s':''} = +{(lots*(holding.lotSize||0.5)).toFixed(2)}% stake</div>
-          </div>
-          <button onClick={()=>setLots(l=>l+1)} style={{ width:40,height:40,borderRadius:11,background:'rgba(255,255,255,0.07)',border:`1px solid ${C.border}`,color:C.text,fontSize:20,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'inherit',flexShrink:0 }}>+</button>
+        <label style={{ fontSize:10, color:C.muted, textTransform:'uppercase', letterSpacing:0.8, fontWeight:700, display:'block', marginBottom:10 }}>
+          How much more to add?
+        </label>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:8 }}>
+          {[25, 50, 75, 100].map(p => (
+            <button key={p} onClick={()=>setPct(p)}
+              style={{ background:pct===p?`linear-gradient(135deg,${C.green},${C.green}bb)`:'rgba(255,255,255,0.06)',
+                border:`1.5px solid ${pct===p?'transparent':C.border}`,
+                borderRadius:11, padding:'12px 6px', cursor:'pointer', fontFamily:'inherit',
+                display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+              <div style={{ fontSize:16, fontWeight:900, color:pct===p?'#fff':C.text }}>{p}%</div>
+              <div style={{ fontSize:9, color:pct===p?'rgba(255,255,255,0.7)':C.muted }}>
+                +{parseFloat(((holding.stake||0)*p/100).toFixed(4))}%
+              </div>
+            </button>
+          ))}
         </div>
       </div>
+
       <div style={{ background:C.greenBg,border:`1px solid ${C.greenBd}`,borderRadius:12,padding:'14px 16px',marginBottom:18 }}>
-        {[['Additional Stake',`+${(lots*(holding.lotSize||0.5)).toFixed(2)}%`],['At Valuation',fmtCr(holding.currentValuation||0)],['Est. Investment',fmt(price)]].map(([l,v],i)=>(
+        {[['Adding',`${pct}% more (+${addStake}% stake)`],['At Valuation',fmtCr(holding.currentValuation||0)],['Est. Investment',fmt(price)]].map(([l,v],i)=>(
           <div key={l} style={{ display:'flex',justifyContent:'space-between',padding:'5px 0',borderBottom:i<2?`1px solid rgba(34,197,94,0.1)`:'none' }}>
             <span style={{ fontSize:11,color:C.muted }}>{l}</span>
             <span style={{ fontSize:11,fontWeight:800,color:i===2?C.green:C.text }}>{v}</span>
@@ -1550,7 +1563,7 @@ function AdminSellRequests({ adminPhone }) {
                 <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:10 }}>
                   {[
                     ['Company',    r.companyName||'—'],
-                    ['Selling',    `${r.lotsToSell} lots (${r.stakeToSell}%)`],
+                    ['Selling',    `${r.sellPercent||100}% of stake (${r.stakeToSell}%)`],
                     ['Asking Val.',fmtCr(r.askingValuation)],
                     ['Exp. Payout',fmt(r.expectedPayout)],
                     ['P&L',        `${r.gainLoss>=0?'+':''}${fmt(r.gainLoss)}`],
