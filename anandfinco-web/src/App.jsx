@@ -633,92 +633,178 @@ function SellFlow({ holding, adminPhone, onClose, onSuccess }) {
 }
 
 // ── CLIENT — HOME ──────────────────────────────────────────────────────────
-function HomeScreen({ clientData, adminPhone }) {
-  const [companies, setCompanies] = useState([])
-  const [loading,   setLoading]   = useState(true)
+function HomeScreen({ user }) {
+  const [companies,  setCompanies]  = useState([])
+  const [portfolio,  setPortfolio]  = useState([])
+  const [adminPhone, setAdminPhone] = useState('')
+  const [investing,  setInvesting]  = useState(null)
+  const [sending,    setSending]    = useState(false)
+  const [done,       setDone]       = useState(false)
+  const [toast,      setToast]      = useState(null)
 
-  useEffect(() => {
-    getDocs(query(collection(db,'companies'), where('active','==',true)))
-      .then(snap => setCompanies(snap.docs.map(d=>({id:d.id,...d.data()}))))
-      .catch(()=>{})
-      .finally(()=>setLoading(false))
-  }, [])
+  const load = useCallback(async () => {
+    try {
+      const [coSnap, pdSnap, cfgSnap] = await Promise.all([
+        getDocs(query(collection(db, 'companies'), where('active', '==', true))),
+        getDoc(doc(db, 'portfolios', user.uid)),
+        getDoc(doc(db, 'adminConfig', 'main')),
+      ])
+      setCompanies(coSnap.docs.map(d => ({ id: d.id, ...d.data() })))
+      setPortfolio(pdSnap.exists() ? pdSnap.data().holdings || [] : [])
+      if (cfgSnap.exists()) setAdminPhone(cfgSnap.data().whatsapp || '')
+    } catch (e) { console.log('home load:', e.message) }
+  }, [user.uid])
+
+  useEffect(() => { load() }, [load])
+  useEffect(() => { const t = setInterval(load, 20000); return () => clearInterval(t) }, [load])
+
+  const totI  = portfolio.reduce((s, h) => s + (h.stake / 100) * h.buyValuation, 0)
+  const totC  = portfolio.reduce((s, h) => { const co = companies.find(c => c.id === h.companyId); return s + (h.stake / 100) * (co?.currentValuation || h.buyValuation) }, 0)
+  const totG  = totC - totI
+  const totGP = totI > 0 ? (totG / totI) * 100 : 0
+
+  async function confirmInvest() {
+    if (!investing) return
+    setSending(true)
+    try {
+      await addDoc(collection(db, 'notifications'), {
+        clientId: user.uid, clientName: user.name || user.email,
+        clientPhone: user.phone || 'N/A', clientEmail: user.email,
+        companyId: investing.id, companyName: investing.name,
+        interestedMin: investing.minInvest,
+        message: `${user.name || 'Client'} is interested in ${investing.name} (min ${fmt(investing.minInvest)})`,
+        timestamp: Timestamp.now(), read: false,
+      })
+      if (adminPhone) {
+        const msg = encodeURIComponent(`Hello Anand Finco!\n\nI'm *${user.name || 'your client'}* (${user.email}).\nInterested in *${investing.name}*.\nMin: ${fmt(investing.minInvest)}\nContact: ${user.phone || 'see app'}\n\n– Anand Finco App`)
+        window.open(`https://wa.me/${adminPhone.replace(/\D/g, '')}?text=${msg}`, '_blank')
+      }
+      setDone(true)
+    } catch { setToast({ m: 'Could not send request. Try again.', t: 'error' }) }
+    setSending(false)
+  }
+
+  const riskC = { Low: C.green, Medium: '#f59e0b', High: C.red }
 
   return (
-    <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
-      <div style={{ background:`linear-gradient(135deg,${C.bg2},#0f2744)`, padding:'18px 18px 14px', flexShrink:0 }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+    <div style={{ flex: 1, overflowY: 'auto' }}>
+      <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
+
+      {/* Header */}
+      <div style={{ background: 'linear-gradient(160deg,#0c1525,#0f2744)', padding: '52px 20px 20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
           <div>
-            <div style={{ fontSize:11, color:C.muted }}>Good day,</div>
-            <div style={{ fontSize:20, fontWeight:900, color:C.text }}>
-              {(clientData?.name || 'Investor').split(' ')[0]} 👋
+            <div style={{ fontSize: 12, color: C.muted }}>Good day,</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: C.text, marginTop: 2 }}>
+              {(user.name || 'Investor').split(' ')[0]} 👋
             </div>
           </div>
-          <div style={{ width:42, height:42, borderRadius:12,
-            background:`linear-gradient(135deg,${C.gold},${C.goldL})`,
-            display:'flex', alignItems:'center', justifyContent:'center',
-            fontWeight:900, color:'#0a0f1e', fontSize:18 }}>
-            {(clientData?.name || 'I')[0]}
+          <div style={{ width: 44, height: 44, borderRadius: 13, background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#0a0f1e', fontSize: 18, boxShadow: `0 4px 20px ${C.gold}40` }}>
+            {(user.name || 'I')[0]}
+          </div>
+        </div>
+        {/* Summary card */}
+        <div style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 18 }}>
+          <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1 }}>TOTAL PORTFOLIO VALUE</div>
+          <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 30, fontWeight: 800, color: '#e8d5a3', margin: '6px 0 14px' }}>{fmt(totC)}</div>
+          <div style={{ height: 1, background: C.border, marginBottom: 14 }} />
+          <div style={{ display: 'flex', gap: 20 }}>
+            {[['INVESTED', fmt(totI), C.text2], ['GAIN', (totG >= 0 ? '+' : '') + fmt(totG), gc(totG)], ['RETURN', pct(totGP), gc(totGP)]].map(([l, v, c]) => (
+              <div key={l}>
+                <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase' }}>{l}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: c, marginTop: 3 }}>{v}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <div style={{ padding:'10px 18px 6px', background:C.bg2, flexShrink:0 }}>
-        <div style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:0.5, textTransform:'uppercase' }}>
-          🏢 Unlisted Stock Opportunities
-        </div>
+      <div style={{ padding: '20px 18px 30px' }}>
+        {/* Active Holdings */}
+        <div style={{ fontSize: 17, fontWeight: 800, color: C.text, marginBottom: 14 }}>Active Investments</div>
+        {portfolio.length === 0
+          ? <Empty icon="🏦" title="No investments yet" sub="Your holdings will appear here" />
+          : portfolio.map((h, i) => {
+            const co   = companies.find(c => c.id === h.companyId)
+            const curr = (h.stake / 100) * (co?.currentValuation || h.buyValuation)
+            const buy  = (h.stake / 100) * h.buyValuation
+            const g    = curr - buy
+            const gp   = buy > 0 ? (g / buy) * 100 : 0
+            return (
+              <Card key={i} style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 11, background: '#0f2744', border: '1px solid #2563eb33', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🏛️</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.companyName}</div>
+                  <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{h.stake}% stake · {h.sector}</div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: C.text }}>{fmt(curr)}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: gc(gp), marginTop: 2 }}>{pct(gp)}</div>
+                </div>
+              </Card>
+            )
+          })}
+
+        {/* Opportunities */}
+        <div style={{ fontSize: 17, fontWeight: 800, color: C.text, marginBottom: 4, marginTop: 26 }}>Opportunities</div>
+        <div style={{ fontSize: 11, color: C.muted, marginBottom: 14 }}>Admin curated · Live pricing</div>
+        {companies.length === 0
+          ? <Empty icon="📭" title="No opportunities right now" sub="Check back soon" />
+          : <div style={{ display: 'flex', gap: 12, overflowX: 'auto', marginLeft: -18, paddingLeft: 18, paddingRight: 18, paddingBottom: 8 }}>
+            {companies.map(co => (
+              <div key={co.id} style={{ minWidth: 210, background: '#0f2031', border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 16, flexShrink: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6, gap: 6 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: C.text, lineHeight: 1.3, flex: 1 }}>{co.name}</div>
+                  <Badge label={co.risk} color={riskC[co.risk] || C.muted} />
+                </div>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 12 }}>{co.sector}</div>
+                {[['MIN INVEST', fmt(co.minInvest), C.gold], ['VALUATION', fmtL(co.currentValuation), C.text2], ['RETURNS', co.expectedReturns, C.green]].map(([l, v, c]) => (
+                  <div key={l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ fontSize: 9, color: C.muted }}>{l}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: c }}>{v}</span>
+                  </div>
+                ))}
+                <button onClick={() => { setInvesting(co); setDone(false) }}
+                  style={{ width: '100%', marginTop: 12, background: `linear-gradient(90deg,${C.gold},${C.goldL})`, border: 'none', borderRadius: 10, padding: 10, color: '#0a0f1e', fontWeight: 900, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  Invest Now →
+                </button>
+              </div>
+            ))}
+          </div>}
       </div>
 
-      <div style={{ flex:1, overflowY:'auto', padding:'12px 18px 30px' }}>
-        {loading && (
-          <div style={{ textAlign:'center', padding:'30px 0', color:C.muted }}>Loading opportunities…</div>
-        )}
-        {!loading && companies.length === 0 && (
-          <Empty icon="🏢" title="No opportunities yet" sub="Admin will add investment opportunities soon." />
-        )}
-        {!loading && companies.map(co => (
-          <Card key={co.id} style={{ marginBottom:12 }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:14, fontWeight:800, color:C.text }}>{co.name}</div>
-                <div style={{ fontSize:10, color:C.muted, marginTop:2 }}>{co.sector} · {co.risk || 'Medium'} Risk</div>
-              </div>
-              <div style={{ textAlign:'right' }}>
-                <div style={{ fontSize:14, fontWeight:900, color:C.gold }}>{co.expectedReturn || '—'}</div>
-                <div style={{ fontSize:9, color:C.muted }}>exp. returns</div>
-              </div>
+      {/* Invest sheet */}
+      <Sheet show={!!investing} onClose={() => { setInvesting(null); setDone(false) }} title={done ? '' : 'Express Interest'}>
+        {investing && !done && (
+          <>
+            <Card style={{ marginBottom: 16, background: 'rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 10 }}>{investing.name}</div>
+              {[['Sector', investing.sector], ['Min Investment', fmt(investing.minInvest)], ['Valuation', fmtL(investing.currentValuation)], ['Expected Returns', investing.expectedReturns], ['Risk', investing.risk]].map(([l, v]) => (
+                <div key={l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
+                  <span style={{ fontSize: 12, color: C.muted }}>{l}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: C.text2 }}>{v}</span>
+                </div>
+              ))}
+            </Card>
+            <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: '10px 13px', marginBottom: 16, fontSize: 12, color: C.gold, lineHeight: 1.6 }}>
+              📲 Our team will contact you on <b>{user.phone || 'your registered number'}</b> within 24 hours.
             </div>
-            {co.description && <div style={{ fontSize:11, color:C.muted, marginBottom:12, lineHeight:1.6 }}>{co.description}</div>}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:12 }}>
-              <div><SLabel text="Valuation"/><div style={{ fontSize:12, fontWeight:700, color:C.text }}>{fmtCr(co.valuation)}</div></div>
-              <div><SLabel text="Min Investment"/><div style={{ fontSize:12, fontWeight:700, color:C.text }}>{fmt(co.minInvestment||0)}</div></div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <Btn label="Cancel" onClick={() => setInvesting(null)} outline full />
+              <Btn label={sending ? 'Sending…' : 'Confirm Interest'} onClick={confirmInvest} loading={sending} color={C.green} full />
             </div>
-            <button onClick={async () => {
-              const clean = (adminPhone||'').replace(/\D/g,'')
-              if (clean) {
-                const msg = encodeURIComponent(`Hello! I'm interested in investing in *${co.name}*.\n\nPlease share more details.\n\n– ${clientData?.name || 'Investor'}`)
-                window.open(`https://wa.me/${clean}?text=${msg}`, '_blank')
-              }
-              await addDoc(collection(db,'notifications'),{
-                type:'investRequest', clientId:auth.currentUser?.uid||'',
-                clientEmail:auth.currentUser?.email||'', clientName:clientData?.name||'',
-                clientPhone:clientData?.phone||'', companyId:co.id, companyName:co.name,
-                timestamp:Timestamp.now(), status:'pending', read:false,
-              })
-            }}
-              style={{ width:'100%', background:`linear-gradient(90deg,${C.gold},${C.goldL})`,
-                border:'none', borderRadius:10, padding:'11px',
-                color:'#0a0f1e', fontWeight:800, fontSize:12, cursor:'pointer',
-                fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-              💬 Invest Now — WhatsApp Admin
-            </button>
-          </Card>
-        ))}
-      </div>
+          </>
+        )}
+        {done && (
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <div style={{ fontSize: 52, marginBottom: 12 }}>✅</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: C.green, marginBottom: 8 }}>Request Sent!</div>
+            <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.7, marginBottom: 24 }}>Your interest has been recorded.<br />WhatsApp opened to connect with our team.</div>
+            <Btn label="Close" onClick={() => { setInvesting(null); setDone(false) }} full />
+          </div>
+        )}
+      </Sheet>
     </div>
-  )
-}
-
 // ── CLIENT — PORTFOLIO ─────────────────────────────────────────────────────
 function PortfolioScreen({ clientData, adminPhone }) {
   const [portfolioData, setPortfolioData] = useState(null)
