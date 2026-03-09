@@ -1,4 +1,4 @@
-/ src/App.jsx  — Anand Finco Complete Web App
+// src/App.jsx  — Anand Finco Complete Web App
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { auth, db } from './firebase.js'
 import {
@@ -1959,3 +1959,4 @@ export default function App() {
     </>
   )
 }
+
