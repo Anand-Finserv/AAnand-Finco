@@ -242,7 +242,7 @@ function LoginScreen() {
     setLoad(false)
   }
 
-  const fill = (u, p) => { setUn(u); setPw(p); setError('') }
+ 
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, background: `radial-gradient(ellipse at 20% 20%,rgba(201,162,39,0.06) 0%,transparent 60%), radial-gradient(ellipse at 80% 80%,rgba(59,130,246,0.04) 0%,transparent 60%), ${C.bg}` }}>
@@ -278,8 +278,9 @@ function LoginScreen() {
 
           <Btn label="Sign In" onClick={login} loading={loading} full />
 
-          {/* Demo */}
-          
+       
+          </div>
+        </div>
         <div style={{ textAlign: 'center', fontSize: 10, color: C.dim, marginTop: 18 }}>🔒 Secured by Firebase Auth · SEBI Compliant</div>
       </div>
     </div>
