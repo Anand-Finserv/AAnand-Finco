@@ -1,4 +1,4 @@
-// src/App.jsx  — Anand Finco Complete Web App
+/ src/App.jsx  — Anand Finco Complete Web App
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { auth, db } from './firebase.js'
 import {
@@ -475,44 +475,440 @@ function HomeScreen({ user }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SELL FLOW  (3 steps: amount → bank → review)
+// ─────────────────────────────────────────────────────────────────────────────
+function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
+  const [step,     setStep]    = useState('amount')
+  const [sellPct,  setSellPct] = useState(100)
+  const [askVal,   setAskVal]  = useState(String(nowVal || holding.buyValuation || 0))
+  const [reason,   setReason]  = useState('')
+  const [bank,     setBank]    = useState({ accountName:'', accountNo:'', confirmNo:'', ifsc:'', bankName:'', accountType:'savings' })
+  const [errors,   setErrors]  = useState({})
+  const [loading,  setLoad]    = useState(false)
+
+  const stakeToSell  = parseFloat(((holding.stake * sellPct) / 100).toFixed(6))
+  const askValNum    = parseInt(askVal) || 0
+  const invested     = holding.investedAmt || (holding.stake / 100) * holding.buyValuation
+  const sellCost     = (sellPct / 100) * invested
+  const sellValue    = (stakeToSell / 100) * askValNum
+  const gainLoss     = sellValue - sellCost
+  const gainPct      = sellCost > 0 ? (gainLoss / sellCost) * 100 : 0
+  const currVal      = (holding.stake / 100) * nowVal
+
+  function validateBank() {
+    const e = {}
+    if (!bank.accountName.trim())                          e.accountName = 'Required'
+    if (!bank.bankName.trim())                             e.bankName    = 'Required'
+    if (!/^\d{9,18}$/.test(bank.accountNo))               e.accountNo   = 'Enter valid 9–18 digit account number'
+    if (bank.accountNo !== bank.confirmNo)                 e.confirmNo   = 'Account numbers do not match'
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bank.ifsc.toUpperCase())) e.ifsc = 'Invalid IFSC (e.g. SBIN0001234)'
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
+
+  async function submitSell() {
+    setLoad(true)
+    try {
+      await addDoc(collection(db, 'sellRequests'), {
+        clientId:        user.uid,
+        clientName:      user.name || user.email,
+        clientEmail:     user.email,
+        clientPhone:     user.phone || '',
+        companyId:       holding.companyId,
+        companyName:     holding.companyName,
+        sector:          holding.sector,
+        totalStake:      holding.stake,
+        sellPercent:     sellPct,
+        stakeToSell,
+        askingValuation: askValNum,
+        expectedPayout:  sellValue,
+        gainLoss,
+        gainPct,
+        reason:          reason || 'Not specified',
+        bankAccountName: bank.accountName,
+        bankName:        bank.bankName,
+        bankAccountNo:   '●●●●' + bank.accountNo.slice(-4),
+        bankIFSC:        bank.ifsc.toUpperCase(),
+        bankAccountType: bank.accountType,
+        timestamp:       Timestamp.now(),
+        status:          'pending',
+        read:            false,
+      })
+      const clean = (adminPhone || '').replace(/\D/g, '')
+      if (clean) {
+        const msg = encodeURIComponent(
+          `🔔 *Sell Request – Anand Finco*\n\n` +
+          `Client: ${user.name || user.email}\n` +
+          `Company: ${holding.companyName}\n` +
+          `Selling: ${sellPct}% of stake (${stakeToSell}%)\n` +
+          `Asking Valuation: ${fmtL(askValNum)}\n` +
+          `*Expected Payout: ${fmt(sellValue)}*\n\nPlease review in app.`
+        )
+        window.open(`https://wa.me/${clean}?text=${msg}`, '_blank')
+      }
+      setStep('done')
+    } catch (e) { setErrors({ submit: e.message }) }
+    setLoad(false)
+  }
+
+  const prog = { amount:1, bank:2, review:3, done:4 }[step]
+
+  return (
+    <div>
+      {/* Progress */}
+      {step !== 'done' && (
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            {['Sell Details', 'Bank Details', 'Review'].map((s, i) => (
+              <div key={s} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
+                <div style={{ width: 26, height: 26, borderRadius: '50%',
+                  background: prog > i+1 ? C.green : prog === i+1 ? C.gold : 'rgba(255,255,255,0.07)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 10, fontWeight: 900, color: prog > i+1 ? '#060d18' : prog === i+1 ? '#060d18' : C.muted }}>
+                  {prog > i+1 ? '✓' : i+1}
+                </div>
+                <div style={{ fontSize: 8, color: prog === i+1 ? C.gold : C.muted, fontWeight: 700, textAlign: 'center' }}>{s}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${((prog-1)/2)*100}%`, background: `linear-gradient(90deg,${C.gold},${C.goldL})`, borderRadius: 99, transition: 'width .4s' }} />
+          </div>
+        </div>
+      )}
+
+      {/* STEP 1 — Sell Details */}
+      {step === 'amount' && (
+        <div>
+          <div style={{ background: 'linear-gradient(135deg,#0f2744,#0a1e38)', border: `1px solid ${C.goldBd}`, borderRadius: 14, padding: 16, marginBottom: 18 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 4 }}>{holding.companyName}</div>
+            <div style={{ fontSize: 11, color: C.muted, marginBottom: 12 }}>{holding.sector} · {holding.stake}% total stake</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+              {[['Invested', fmt(invested), C.text2], ['Current', fmt(currVal), C.gold], ['P&L', (currVal-invested >= 0 ? '+' : '')+fmt(currVal-invested), gc(currVal-invested)]].map(([l,v,c]) => (
+                <div key={l} style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 9, padding: '8px 10px' }}>
+                  <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase', marginBottom: 3 }}>{l}</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: c }}>{v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ fontSize: 10, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 700, marginBottom: 10 }}>How much stake to sell?</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
+              {[25, 50, 75, 100].map(p => (
+                <button key={p} onClick={() => setSellPct(p)}
+                  style={{ background: sellPct === p ? `linear-gradient(135deg,${C.red},${C.red}cc)` : 'rgba(255,255,255,0.06)',
+                    border: `1.5px solid ${sellPct === p ? 'transparent' : C.border}`,
+                    borderRadius: 10, padding: '12px 4px', cursor: 'pointer', fontFamily: 'inherit',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                  <div style={{ fontSize: 15, fontWeight: 900, color: sellPct === p ? '#fff' : C.text }}>{p}%</div>
+                  <div style={{ fontSize: 9, color: sellPct === p ? 'rgba(255,255,255,0.7)' : C.muted }}>{parseFloat(((holding.stake*p)/100).toFixed(4))}%</div>
+                </button>
+              ))}
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', marginTop: 10, textAlign: 'center', fontSize: 12, color: C.muted }}>
+              Selling <strong style={{ color: C.gold }}>{sellPct}%</strong> of your stake = <strong style={{ color: C.text }}>{stakeToSell}%</strong>
+            </div>
+          </div>
+
+          <Field label="Asking Company Valuation (₹) *" value={askVal} onChange={setAskVal} type="number"
+            placeholder={String(nowVal)} note={`Current valuation: ${fmtL(nowVal)} · Set your asking price`} />
+
+          <div style={{ background: gainLoss >= 0 ? C.greenBg : C.redBg, border: `1px solid ${gainLoss >= 0 ? C.green : C.red}44`, borderRadius: 12, padding: 16, marginBottom: 18 }}>
+            <div style={{ fontSize: 10, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>Expected Payout Breakdown</div>
+            {[['Selling', `${sellPct}% of stake (${stakeToSell}%)`, C.text], ['Your Cost (portion)', fmt(sellCost), C.text2], ['At Asking Valuation', fmtL(askValNum), C.text2], ['Expected Payout', fmt(sellValue), C.gold]].map(([l,v,c]) => (
+              <div key={l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
+                <span style={{ fontSize: 11, color: C.muted }}>{l}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: c }}>{v}</span>
+              </div>
+            ))}
+            <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '10px 0' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 12, fontWeight: 800, color: C.text }}>{gainLoss >= 0 ? '🎉 Est. Profit' : '⚠ Est. Loss'}</span>
+              <span style={{ fontSize: 16, fontWeight: 900, color: gc(gainLoss) }}>{gainLoss >= 0 ? '+' : ''}{fmt(gainLoss)} ({gainLoss >= 0 ? '+' : ''}{gainPct.toFixed(1)}%)</span>
+            </div>
+          </div>
+
+          <Field label="Reason for Selling (optional)" value={reason} onChange={setReason} rows={2} placeholder="e.g. Need liquidity, Portfolio rebalancing…" />
+
+          <div style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 10, padding: '10px 13px', marginBottom: 18, fontSize: 11, color: '#f59e0b', lineHeight: 1.7 }}>
+            ⏳ Admin finds a buyer from the network. Payout transferred to your bank after buyer confirmation. Typical time: 7–30 days.
+          </div>
+          <Btn label="Continue to Bank Details →" onClick={() => setStep('bank')} full />
+        </div>
+      )}
+
+      {/* STEP 2 — Bank Details */}
+      {step === 'bank' && (
+        <div>
+          <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: '10px 13px', marginBottom: 18, fontSize: 11, color: C.gold, lineHeight: 1.7 }}>
+            🔒 Bank details are used only for payout. Account number is masked in our records.
+          </div>
+
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 12 }}>👤 Account Holder</div>
+            <Field label="Full Name (as per bank) *" value={bank.accountName}
+              onChange={v => { setBank(b => ({...b, accountName:v})); setErrors(e => ({...e, accountName:null})) }}
+              placeholder="Rahul Sharma" note={errors.accountName ? `⚠ ${errors.accountName}` : 'Must match bank account name exactly'} />
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 10, color: '#9ca3af', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Account Type *</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {['savings', 'current'].map(t => (
+                  <button key={t} onClick={() => setBank(b => ({...b, accountType:t}))}
+                    style={{ flex: 1, background: bank.accountType === t ? `linear-gradient(135deg,${C.gold},${C.goldL})` : 'rgba(255,255,255,0.05)',
+                      border: `1.5px solid ${bank.accountType === t ? 'transparent' : C.border}`,
+                      borderRadius: 9, padding: 9, color: bank.accountType === t ? '#060d18' : C.muted,
+                      fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize' }}>{t}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 12 }}>🏦 Bank Account</div>
+            <Field label="Bank Name *" value={bank.bankName}
+              onChange={v => { setBank(b => ({...b, bankName:v})); setErrors(e => ({...e, bankName:null})) }}
+              placeholder="State Bank of India" note={errors.bankName ? `⚠ ${errors.bankName}` : ''} />
+            <Field label="Account Number *" value={bank.accountNo} type="password"
+              onChange={v => { setBank(b => ({...b, accountNo:v.replace(/\D/g,'')})); setErrors(e => ({...e, accountNo:null})) }}
+              placeholder="Enter account number"
+              note={errors.accountNo ? `⚠ ${errors.accountNo}` : '9–18 digits. Hidden for security.'} />
+            <Field label="Confirm Account Number *" value={bank.confirmNo}
+              onChange={v => { setBank(b => ({...b, confirmNo:v.replace(/\D/g,'')})); setErrors(e => ({...e, confirmNo:null})) }}
+              placeholder="Re-enter account number"
+              note={errors.confirmNo ? `⚠ ${errors.confirmNo}` : bank.confirmNo && bank.accountNo === bank.confirmNo ? '✅ Numbers match' : ''} />
+            <Field label="IFSC Code *" value={bank.ifsc.toUpperCase()}
+              onChange={v => { setBank(b => ({...b, ifsc:v.toUpperCase().slice(0,11)})); setErrors(e => ({...e, ifsc:null})) }}
+              placeholder="SBIN0001234" note={errors.ifsc ? `⚠ ${errors.ifsc}` : '11 characters · On your cheque/passbook'} />
+          </div>
+
+          <div style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 10, padding: '10px 13px', marginBottom: 18, fontSize: 11, color: C.blue, lineHeight: 1.7 }}>
+            🔐 Account number is masked in storage. Admin initiates NEFT/IMPS after buyer payment clears.
+          </div>
+
+          {errors.submit && <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 8, padding: '8px 12px', color: C.red, fontSize: 11, marginBottom: 12 }}>⚠ {errors.submit}</div>}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <Btn label="← Back" onClick={() => setStep('amount')} outline full />
+            <Btn label="Review →" onClick={() => { if (validateBank()) setStep('review') }} full />
+          </div>
+        </div>
+      )}
+
+      {/* STEP 3 — Review */}
+      {step === 'review' && (
+        <div>
+          <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 10, padding: '10px 13px', marginBottom: 16, fontSize: 11, color: C.red, lineHeight: 1.7 }}>
+            ⚠ Review carefully. Once submitted, request cannot be cancelled without admin approval.
+          </div>
+
+          <div style={{ background: C.card, border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 14, marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, marginBottom: 10, textTransform: 'uppercase' }}>📊 Sell Summary</div>
+            {[['Company', holding.companyName], ['Selling', `${sellPct}% of stake (${stakeToSell}%)`], ['Asking Valuation', fmtL(askValNum)], ['Expected Payout', fmt(sellValue)], ['Est. Profit/Loss', `${gainLoss >= 0 ? '+' : ''}${fmt(gainLoss)} (${gainLoss >= 0 ? '+' : ''}${gainPct.toFixed(1)}%)`]].map(([l,v], i) => (
+              <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < 4 ? `1px solid ${C.border}` : 'none' }}>
+                <span style={{ fontSize: 11, color: C.muted }}>{l}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: l === 'Expected Payout' ? C.gold : l.includes('Profit') ? gc(gainLoss) : C.text }}>{v}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: C.text, marginBottom: 10, textTransform: 'uppercase' }}>🏦 Payout Bank Account</div>
+            {[['Account Name', bank.accountName], ['Bank', bank.bankName], ['Account No.', `●●●●${bank.accountNo.slice(-4)}`], ['IFSC', bank.ifsc.toUpperCase()], ['Type', bank.accountType.charAt(0).toUpperCase()+bank.accountType.slice(1)]].map(([l,v]) => (
+              <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${C.border}` }}>
+                <span style={{ fontSize: 11, color: C.muted }}>{l}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.text }}>{v}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 10, color: C.muted, lineHeight: 1.8 }}>
+            By submitting I confirm: bank details are correct, payout subject to buyer availability (7–30 days), TDS as applicable will be deducted.
+          </div>
+
+          {errors.submit && <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 8, padding: '8px 12px', color: C.red, fontSize: 11, marginBottom: 12 }}>⚠ {errors.submit}</div>}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <Btn label="← Edit" onClick={() => setStep('bank')} outline full />
+            <Btn label="Submit Sell Request" onClick={submitSell} loading={loading} danger full />
+          </div>
+        </div>
+      )}
+
+      {/* STEP 4 — Done */}
+      {step === 'done' && (
+        <div style={{ textAlign: 'center', padding: '16px 0' }}>
+          <div style={{ fontSize: 52, marginBottom: 12 }}>✅</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: C.green, marginBottom: 8 }}>Request Submitted!</div>
+          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.8, marginBottom: 22 }}>
+            Your sell request for <strong style={{ color: C.text }}>{holding.companyName}</strong> has been sent.<br />Admin has been notified on WhatsApp.
+          </div>
+          <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 16, marginBottom: 20, textAlign: 'left' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, marginBottom: 10 }}>📋 What happens next?</div>
+            {[['Admin Reviews', 'Your request is listed in the investor network.'], ['Buyer Matched', 'Typically 7–30 business days.'], ['Payment Cleared', 'Buyer payment received & verified.'], ['Payout to You', 'Transferred to your bank via NEFT/IMPS.']].map(([t,d], i) => (
+              <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: '#060d18', flexShrink: 0 }}>{i+1}</div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: C.text }}>{t}</div>
+                  <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Btn label="Back to Portfolio" onClick={() => { onSuccess && onSuccess(); onClose() }} full />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BUY MORE FLOW
+// ─────────────────────────────────────────────────────────────────────────────
+function BuyMoreFlow({ holding, nowVal, adminPhone, user, onClose }) {
+  const [addPct,   setAddPct]  = useState(50)
+  const [done,     setDone]    = useState(false)
+  const [loading,  setLoad]    = useState(false)
+  const [toast,    setToast]   = useState(null)
+
+  const addStake = parseFloat(((holding.stake * addPct) / 100).toFixed(6))
+  const estCost  = (addStake / 100) * nowVal
+
+  async function submit() {
+    setLoad(true)
+    try {
+      await addDoc(collection(db, 'notifications'), {
+        type:                'buyMore',
+        clientId:            user.uid,
+        clientName:          user.name || user.email,
+        clientEmail:         user.email,
+        clientPhone:         user.phone || '',
+        companyId:           holding.companyId,
+        companyName:         holding.companyName,
+        sector:              holding.sector,
+        addPercent:          addPct,
+        stakeToAdd:          addStake,
+        currentValuation:    nowVal,
+        estimatedInvestment: estCost,
+        message:             `${user.name || 'Client'} wants to buy ${addPct}% more (+${addStake}%) of ${holding.companyName}. Est: ${fmt(estCost)}`,
+        timestamp:           Timestamp.now(),
+        read:                false,
+      })
+      const clean = (adminPhone || '').replace(/\D/g, '')
+      if (clean) {
+        const msg = encodeURIComponent(
+          `🔔 *Buy More Request – Anand Finco*\n\n` +
+          `Client: ${user.name || user.email}\n` +
+          `Company: ${holding.companyName}\n` +
+          `Adding: ${addPct}% more (+${addStake}% stake)\n` +
+          `Valuation: ${fmtL(nowVal)}\n` +
+          `*Est. Investment: ${fmt(estCost)}*`
+        )
+        window.open(`https://wa.me/${clean}?text=${msg}`, '_blank')
+      }
+      setDone(true)
+    } catch (e) { setToast({ m: e.message, t: 'error' }) }
+    setLoad(false)
+  }
+
+  if (done) return (
+    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+      <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
+      <div style={{ fontSize: 52, marginBottom: 12 }}>🎉</div>
+      <div style={{ fontSize: 18, fontWeight: 900, color: C.green, marginBottom: 8 }}>Interest Recorded!</div>
+      <div style={{ fontSize: 12, color: C.muted, marginBottom: 20, lineHeight: 1.7 }}>Admin notified. They will contact you to arrange the additional investment.</div>
+      <Btn label="Close" onClick={onClose} full />
+    </div>
+  )
+
+  return (
+    <div>
+      <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
+      <div style={{ background: 'linear-gradient(135deg,#0f2744,#0a1e38)', border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 14, marginBottom: 18 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 3 }}>{holding.companyName}</div>
+        <div style={{ fontSize: 11, color: C.muted }}>Current stake: {holding.stake}% · Valuation: {fmtL(nowVal)}</div>
+      </div>
+
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: 10, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 700, marginBottom: 10 }}>How much more to add?</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
+          {[25, 50, 75, 100].map(p => (
+            <button key={p} onClick={() => setAddPct(p)}
+              style={{ background: addPct === p ? `linear-gradient(135deg,${C.green},${C.green}cc)` : 'rgba(255,255,255,0.06)',
+                border: `1.5px solid ${addPct === p ? 'transparent' : C.border}`,
+                borderRadius: 10, padding: '12px 4px', cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+              <div style={{ fontSize: 15, fontWeight: 900, color: addPct === p ? '#fff' : C.text }}>{p}%</div>
+              <div style={{ fontSize: 9, color: addPct === p ? 'rgba(255,255,255,0.7)' : C.muted }}>+{parseFloat(((holding.stake*p)/100).toFixed(4))}%</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ background: C.greenBg, border: `1px solid ${C.green}33`, borderRadius: 12, padding: 14, marginBottom: 18 }}>
+        {[['Adding', `${addPct}% more (+${addStake}% stake)`], ['At Valuation', fmtL(nowVal)], ['Est. Investment', fmt(estCost)]].map(([l,v], i) => (
+          <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: i < 2 ? `1px solid rgba(34,197,94,0.1)` : 'none' }}>
+            <span style={{ fontSize: 11, color: C.muted }}>{l}</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: i === 2 ? C.green : C.text }}>{v}</span>
+          </div>
+        ))}
+      </div>
+      <Btn label={loading ? 'Submitting…' : 'Submit Interest to Admin →'} onClick={submit} loading={loading} color={C.green} full />
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CLIENT — PORTFOLIO
 // ─────────────────────────────────────────────────────────────────────────────
 function PortfolioScreen({ user }) {
-  const [holdings,  setHoldings]  = useState([])
-  const [companies, setCompanies] = useState([])
-  const [loading,   setLoading]   = useState(true)
+  const [holdings,    setHoldings]    = useState([])
+  const [companies,   setCompanies]   = useState([])
+  const [adminPhone,  setAdminPhone]  = useState('')
+  const [loading,     setLoading]     = useState(true)
+  const [selected,    setSelected]    = useState(null)   // expanded holding index
+  const [activeSheet, setActiveSheet] = useState(null)   // 'sell' | 'buyMore'
+  const [toast,       setToast]       = useState(null)
 
-  useEffect(() => {
+  function load() {
     Promise.all([
       getDoc(doc(db, 'portfolios', user.uid)),
       getDocs(collection(db, 'companies')),
-    ]).then(([pd, co]) => {
+      getDoc(doc(db, 'adminConfig', 'main')),
+    ]).then(([pd, co, cfg]) => {
       setHoldings(pd.exists() ? pd.data().holdings || [] : [])
       setCompanies(co.docs.map(d => ({ id: d.id, ...d.data() })))
+      if (cfg.exists()) setAdminPhone(cfg.data().whatsapp || '')
     }).catch(() => {}).finally(() => setLoading(false))
-  }, [user.uid])
+  }
+
+  useEffect(() => { load() }, [user.uid])
 
   const enriched = holdings.map(h => {
     const co   = companies.find(c => c.id === h.companyId)
-    const curr = (h.stake / 100) * (co?.currentValuation || h.buyValuation)
+    const nowV = co?.currentValuation || h.buyValuation
+    const curr = (h.stake / 100) * nowV
     const buy  = (h.stake / 100) * h.buyValuation
     const g    = curr - buy
     const gp   = buy > 0 ? (g / buy) * 100 : 0
-    const vp   = h.buyValuation > 0 ? ((co?.currentValuation || h.buyValuation) - h.buyValuation) / h.buyValuation * 100 : 0
-    return { ...h, curr, buy, g, gp, vp, nowVal: co?.currentValuation || h.buyValuation }
+    const vp   = h.buyValuation > 0 ? ((nowV - h.buyValuation) / h.buyValuation * 100) : 0
+    return { ...h, curr, buy, g, gp, vp, nowVal: nowV }
   })
   const totI = enriched.reduce((s, h) => s + h.buy, 0)
   const totC = enriched.reduce((s, h) => s + h.curr, 0)
   const totG = totC - totI
   const totP = totI > 0 ? (totG / totI) * 100 : 0
 
+  const selH = selected !== null ? enriched[selected] : null
+
   if (loading) return <Loader />
 
   return (
     <div style={{ flex: 1, overflowY: 'auto' }}>
+      <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
+
       <div style={{ background: C.bg2, padding: '52px 18px 18px', borderBottom: `1px solid ${C.border}` }}>
         <div style={{ fontSize: 24, fontWeight: 900, color: C.text }}>My Portfolio</div>
-        <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{enriched.length} holdings · Live valuations</div>
+        <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{enriched.length} holdings · Tap a card to buy / sell</div>
       </div>
 
       <div style={{ padding: '18px 18px 40px' }}>
@@ -555,38 +951,88 @@ function PortfolioScreen({ user }) {
         {enriched.length === 0 && <Empty icon="📊" title="No holdings yet" sub="Your portfolio will appear here once your advisor adds your investments" />}
 
         {/* Holdings */}
-        {enriched.map((h, i) => (
-          <Card key={i} style={{ marginBottom: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
-              <div style={{ width: 46, height: 46, borderRadius: 13, background: '#0f2744', border: '1px solid #2563eb33', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🏛️</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>{h.companyName}</div>
-                <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{h.sector}</div>
-              </div>
-              <div style={{ background: `${gc(h.g)}18`, border: `1px solid ${gc(h.g)}44`, borderRadius: 9, padding: '5px 10px' }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: gc(h.g) }}>{pct(h.gp)}</div>
-              </div>
-            </div>
-            <div style={{ height: 1, background: C.border, marginBottom: 14 }} />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
-              {[['Stake', `${h.stake}%`, C.text2], ['Invested', fmt(h.buy), C.text2], ['Current', fmt(h.curr), C.gold], ['P&L', (h.g >= 0 ? '+' : '') + fmt(h.g), gc(h.g)], ['Buy Val.', fmtL(h.buyValuation), C.muted], ['Now Val.', fmtL(h.nowVal), gc(h.vp)]].map(([l, v, c]) => (
-                <div key={l}>
-                  <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase', marginBottom: 3 }}>{l}</div>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: c }}>{v}</div>
+        {enriched.map((h, i) => {
+          const isOpen = selected === i
+          return (
+            <div key={i} style={{ marginBottom: 14 }}>
+              {/* Card */}
+              <div onClick={() => setSelected(isOpen ? null : i)}
+                style={{ background: isOpen ? 'rgba(201,162,39,0.06)' : C.card, border: `1px solid ${isOpen ? C.goldBd : C.border}`, borderRadius: isOpen ? '16px 16px 0 0' : 16, padding: 16, cursor: 'pointer' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: 13, background: '#0f2744', border: '1px solid #2563eb33', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🏛️</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>{h.companyName}</div>
+                    <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{h.sector}</div>
+                  </div>
+                  <div style={{ background: `${gc(h.g)}18`, border: `1px solid ${gc(h.g)}44`, borderRadius: 9, padding: '5px 10px' }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: gc(h.g) }}>{pct(h.gp)}</div>
+                  </div>
                 </div>
-              ))}
-            </div>
-            <div style={{ marginTop: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: C.muted, marginBottom: 5 }}>
-                <span>Valuation change</span><span style={{ color: gc(h.vp), fontWeight: 700 }}>{pct(h.vp)}</span>
+                <div style={{ height: 1, background: C.border, marginBottom: 14 }} />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+                  {[['Stake', `${h.stake}%`, C.text2], ['Invested', fmt(h.buy), C.text2], ['Current', fmt(h.curr), C.gold], ['P&L', (h.g >= 0 ? '+' : '') + fmt(h.g), gc(h.g)], ['Buy Val.', fmtL(h.buyValuation), C.muted], ['Now Val.', fmtL(h.nowVal), gc(h.vp)]].map(([l, v, c]) => (
+                    <div key={l}>
+                      <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase', marginBottom: 3 }}>{l}</div>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: c }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 14 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: C.muted, marginBottom: 5 }}>
+                    <span>Valuation change</span><span style={{ color: gc(h.vp), fontWeight: 700 }}>{pct(h.vp)}</span>
+                  </div>
+                  <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${Math.min(Math.abs(h.vp) * 3, 100)}%`, background: gc(h.vp), borderRadius: 99 }} />
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center', marginTop: 10, fontSize: 10, color: C.muted }}>
+                  {isOpen ? '▲ tap to collapse' : '▼ tap to sell / buy more'}
+                </div>
               </div>
-              <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${Math.min(Math.abs(h.vp) * 3, 100)}%`, background: gc(h.vp), borderRadius: 99 }} />
-              </div>
+
+              {/* Action panel */}
+              {isOpen && (
+                <div style={{ background: 'rgba(10,18,34,0.97)', border: `1px solid ${C.goldBd}`, borderTop: 'none', borderRadius: '0 0 16px 16px', padding: 16 }}>
+                  <div style={{ fontSize: 11, color: C.muted, marginBottom: 12, textAlign: 'center' }}>
+                    What would you like to do with <strong style={{ color: C.text }}>{h.companyName}</strong>?
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <button onClick={() => setActiveSheet('sell')}
+                      style={{ background: C.redBg, border: `1.5px solid ${C.red}44`, borderRadius: 12, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                      <div style={{ fontSize: 22 }}>💸</div>
+                      <div style={{ fontSize: 13, fontWeight: 900, color: C.red }}>Sell Stake</div>
+                      <div style={{ fontSize: 9, color: C.muted, textAlign: 'center', lineHeight: 1.4 }}>List your stake for sale. Payout on buyer match.</div>
+                    </button>
+                    <button onClick={() => setActiveSheet('buyMore')}
+                      style={{ background: C.greenBg, border: `1.5px solid ${C.green}44`, borderRadius: 12, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                      <div style={{ fontSize: 22 }}>📈</div>
+                      <div style={{ fontSize: 13, fontWeight: 900, color: C.green }}>Buy More</div>
+                      <div style={{ fontSize: 9, color: C.muted, textAlign: 'center', lineHeight: 1.4 }}>Increase your stake at current valuation.</div>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          </Card>
-        ))}
+          )
+        })}
       </div>
+
+      {/* Sell Sheet */}
+      <Sheet show={activeSheet === 'sell'} onClose={() => setActiveSheet(null)} title={`Sell Stake — ${selH?.companyName || ''}`}>
+        {selH && (
+          <SellFlow holding={selH} nowVal={selH.nowVal} adminPhone={adminPhone} user={user}
+            onClose={() => setActiveSheet(null)}
+            onSuccess={() => { setToast({ m: '✅ Sell request submitted!' }); load() }} />
+        )}
+      </Sheet>
+
+      {/* Buy More Sheet */}
+      <Sheet show={activeSheet === 'buyMore'} onClose={() => setActiveSheet(null)} title={`Buy More — ${selH?.companyName || ''}`}>
+        {selH && (
+          <BuyMoreFlow holding={selH} nowVal={selH.nowVal} adminPhone={adminPhone} user={user}
+            onClose={() => { setActiveSheet(null); setToast({ m: '✅ Interest submitted!' }) }} />
+        )}
+      </Sheet>
     </div>
   )
 }
@@ -1092,6 +1538,130 @@ function AdminPortfolios() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ADMIN — SELL REQUESTS
+// ─────────────────────────────────────────────────────────────────────────────
+function AdminSellRequests() {
+  const [reqs,  setReqs]  = useState([])
+  const [toast, setToast] = useState(null)
+  const [conf,  setConf]  = useState(null)
+
+  const load = useCallback(async () => {
+    try {
+      const snap = await getDocs(query(collection(db, 'sellRequests'), orderBy('timestamp', 'desc')))
+      setReqs(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    } catch (e) { console.log('sell reqs:', e.message) }
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  async function approve(r) {
+    try {
+      await updateDoc(doc(db, 'sellRequests', r.id), { status: 'approved', read: true })
+      setToast({ m: `✅ Approved sell for ${r.clientName}` })
+      setConf(null); load()
+      const ph = (r.clientPhone || '').replace(/\D/g, '')
+      if (ph) {
+        const msg = encodeURIComponent(`Hello ${r.clientName}! ✅ Your sell request for *${r.companyName}* has been approved!\n\nPayout of *${fmt(r.expectedPayout)}* will be transferred to your bank account (${r.bankAccountNo}) within 2–3 business days.\n\n– Anand Finco`)
+        window.open(`https://wa.me/${ph}?text=${msg}`, '_blank')
+      }
+    } catch (e) { setToast({ m: e.message, t: 'error' }) }
+  }
+
+  async function reject(r) {
+    try {
+      await updateDoc(doc(db, 'sellRequests', r.id), { status: 'rejected', read: true })
+      setToast({ m: 'Request rejected' }); setConf(null); load()
+    } catch (e) { setToast({ m: e.message, t: 'error' }) }
+  }
+
+  const pending  = reqs.filter(r => r.status === 'pending')
+  const resolved = reqs.filter(r => r.status !== 'pending')
+  const unread   = pending.filter(r => !r.read).length
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
+      <Confirm msg={conf?.msg} onYes={conf?.onYes} onNo={() => setConf(null)} />
+      <div style={{ background: C.bg2, padding: '52px 18px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+        <div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: C.text }}>Sell Requests</div>
+          <div style={{ fontSize: 11, color: unread > 0 ? C.red : C.muted, marginTop: 2 }}>{unread > 0 ? `${unread} new pending` : 'All reviewed ✓'}</div>
+        </div>
+        <button onClick={load} style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>🔄 Refresh</button>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
+        {reqs.length === 0 && <Empty icon="📤" title="No sell requests" sub="When clients submit sell requests, they appear here." />}
+
+        {pending.length > 0 && <>
+          <div style={{ fontSize: 10, color: C.red, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>⏳ Pending ({pending.length})</div>
+          {pending.map(r => (
+            <div key={r.id} style={{ background: C.redBg, border: `1px solid ${C.red}33`, borderRadius: 16, padding: 16, marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  {!r.read && <div style={{ width: 9, height: 9, borderRadius: '50%', background: C.red, flexShrink: 0 }} />}
+                  <div style={{ fontSize: 15, fontWeight: 900, color: C.text }}>{r.clientName}</div>
+                </div>
+                <Badge label="SELL REQUEST" color={C.red} />
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {[['Company', r.companyName || '—'], ['Selling', `${r.sellPercent}% of stake`], ['Asking Val.', fmtL(r.askingValuation)], ['Exp. Payout', fmt(r.expectedPayout)], ['P&L', `${r.gainLoss >= 0 ? '+' : ''}${fmt(r.gainLoss)}`], ['Date', r.timestamp?.toDate?.()?.toLocaleDateString('en-IN') || '—']].map(([l, v]) => (
+                    <div key={l}>
+                      <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase' }}>{l}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: l === 'Exp. Payout' ? C.gold : C.text2, marginTop: 2 }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {r.bankAccountName && (
+                <div style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, color: C.blue, fontWeight: 800, marginBottom: 8 }}>🏦 Payout Bank</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                    {[['Name', r.bankAccountName], ['Bank', r.bankName], ['Account', r.bankAccountNo], ['IFSC', r.bankIFSC]].map(([l, v]) => (
+                      <div key={l}>
+                        <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase' }}>{l}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: C.text2, marginTop: 2 }}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div style={{ background: C.greenBg, border: `1px solid ${C.green}33`, borderRadius: 10, padding: '10px 12px', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: 9, color: C.muted }}>PAYOUT AMOUNT</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: C.green }}>{fmt(r.expectedPayout)}</div>
+                </div>
+                <div style={{ fontSize: 26 }}>💸</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setConf({ msg: `Approve sell of ${r.sellPercent}% stake in ${r.companyName} for ${fmt(r.expectedPayout)}?`, onYes: () => approve(r) })}
+                  style={{ flex: 1, background: C.greenBg, border: `1px solid ${C.green}44`, borderRadius: 10, padding: 11, color: C.green, fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  ✅ Approve
+                </button>
+                <button onClick={() => setConf({ msg: `Reject ${r.clientName}'s sell request?`, onYes: () => reject(r) })}
+                  style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 10, padding: '11px 16px', color: C.red, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>❌</button>
+              </div>
+            </div>
+          ))}
+        </>}
+
+        {resolved.length > 0 && <>
+          <div style={{ fontSize: 10, color: C.muted, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', margin: '14px 0 10px' }}>History</div>
+          {resolved.map(r => (
+            <div key={r.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px 14px', marginBottom: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{r.clientName} — {r.companyName}</div>
+                <Badge label={r.status === 'approved' ? '✅ APPROVED' : '❌ REJECTED'} color={r.status === 'approved' ? C.green : C.red} />
+              </div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 5 }}>{r.sellPercent}% of stake · {fmt(r.expectedPayout)}</div>
+            </div>
+          ))}
+        </>}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ADMIN — CLIENTS
 // ─────────────────────────────────────────────────────────────────────────────
 function AdminClients() {
@@ -1266,6 +1836,11 @@ service cloud.firestore {
       allow write: if request.auth.token.email
         =="admin@anandfinco.com";
     }
+    match /sellRequests/{id} {
+      allow create: if request.auth != null;
+      allow read,update: if request.auth.uid == resource.data.clientId
+        || request.auth.token.email =="admin@anandfinco.com";
+    }
   }
 }`}</pre>
           </div>
@@ -1323,6 +1898,7 @@ function AdminApp({ user }) {
     { id: 'companies',  icon: '🏢', label: 'Companies' },
     { id: 'portfolios', icon: '📊', label: 'Portfolios' },
     { id: 'notifs',     icon: '🔔', label: 'Requests', badge: unread },
+    { id: 'sell',       icon: '💸', label: 'Sell Reqs' },
     { id: 'clients',    icon: '👥', label: 'Clients' },
     { id: 'settings',   icon: '⚙️', label: 'Settings' },
   ]
@@ -1332,6 +1908,7 @@ function AdminApp({ user }) {
         {tab === 'companies'  && <AdminCompanies />}
         {tab === 'portfolios' && <AdminPortfolios />}
         {tab === 'notifs'     && <AdminNotifications />}
+        {tab === 'sell'       && <AdminSellRequests />}
         {tab === 'clients'    && <AdminClients />}
         {tab === 'settings'   && <AdminSettings user={user} />}
       </div>
