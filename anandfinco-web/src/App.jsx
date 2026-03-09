@@ -148,12 +148,12 @@ function Sheet({ show, onClose, title, children }) {
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <div onClick={e => e.stopPropagation()}
-        style={{ width: '100%', maxWidth: 430, background: '#0c1829', borderTopLeftRadius: 24, borderTopRightRadius: 24, border: '1px solid rgba(255,255,255,0.08)', maxHeight: '90dvh', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 20px 14px' }}>
+        style={{ width: '100%', maxWidth: 430, background: '#0c1829', borderTopLeftRadius: 24, borderTopRightRadius: 24, border: '1px solid rgba(255,255,255,0.08)', maxHeight: '90dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 20px 14px', flexShrink: 0 }}>
           <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>{title}</div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: 8, width: 30, height: 30, color: C.muted, fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}>×</button>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: 8, width: 30, height: 30, color: C.muted, fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>×</button>
         </div>
-        <div style={{ overflowY: 'auto', padding: '0 20px 24px' }}>{children}</div>
+        <div style={{ overflowY: 'auto', overflowX: 'hidden', padding: '0 20px 24px', width: '100%', boxSizing: 'border-box' }}>{children}</div>
       </div>
     </div>
   )
@@ -165,7 +165,7 @@ function Confirm({ msg, onYes, onNo }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ background: C.bg2, border: `1px solid ${C.border}`, borderRadius: 20, padding: 24, width: '100%', maxWidth: 340 }}>
         <div style={{ fontSize: 14, color: C.text, fontWeight: 600, marginBottom: 20, lineHeight: 1.5 }}>{msg}</div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, width: '100%', boxSizing: 'border-box' }}>
           <Btn label="Cancel"  onClick={onNo}  outline full sm />
           <Btn label="Confirm" onClick={onYes} danger  full sm />
         </div>
@@ -279,17 +279,7 @@ function LoginScreen() {
           <Btn label="Sign In" onClick={login} loading={loading} full />
 
           {/* Demo */}
-          <div style={{ marginTop: 18, background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 14 }}>
-            <div style={{ fontSize: 11, color: C.gold, fontWeight: 800, marginBottom: 10 }}>Demo Credentials — tap to fill</div>
-            {[['Admin', 'admin', 'admin@2025'], ['Client 1', 'rahul.sharma', 'client123'], ['Client 2', 'priya.patel', 'client456']].map(([r, u, p]) => (
-              <div key={u} onClick={() => fill(u, p)}
-                style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: `1px solid ${C.border}`, cursor: 'pointer' }}>
-                <span style={{ fontSize: 11, color: C.muted }}>{r}</span>
-                <span style={{ fontSize: 11, color: C.text2, fontWeight: 600 }}>{u} / {p}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+          
         <div style={{ textAlign: 'center', fontSize: 10, color: C.dim, marginTop: 18 }}>🔒 Secured by Firebase Auth · SEBI Compliant</div>
       </div>
     </div>
@@ -455,7 +445,7 @@ function HomeScreen({ user }) {
             <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: '10px 13px', marginBottom: 16, fontSize: 12, color: C.gold, lineHeight: 1.6 }}>
               📲 Our team will contact you on <b>{user.phone || 'your registered number'}</b> within 24 hours.
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, width: '100%', boxSizing: 'border-box' }}>
               <Btn label="Cancel" onClick={() => setInvesting(null)} outline full />
               <Btn label={sending ? 'Sending…' : 'Confirm Interest'} onClick={confirmInvest} loading={sending} color={C.green} full />
             </div>
@@ -596,19 +586,23 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
           <div style={{ marginBottom: 18 }}>
             <div style={{ fontSize: 10, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 700, marginBottom: 10 }}>How much stake to sell?</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
-              {[25, 50, 75, 100].map(p => (
-                <button key={p} onClick={() => setSellPct(p)}
-                  style={{ background: sellPct === p ? `linear-gradient(135deg,${C.red},${C.red}cc)` : 'rgba(255,255,255,0.06)',
-                    border: `1.5px solid ${sellPct === p ? 'transparent' : C.border}`,
-                    borderRadius: 10, padding: '12px 4px', cursor: 'pointer', fontFamily: 'inherit',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                  <div style={{ fontSize: 15, fontWeight: 900, color: sellPct === p ? '#fff' : C.text }}>{p}%</div>
-                  <div style={{ fontSize: 9, color: sellPct === p ? 'rgba(255,255,255,0.7)' : C.muted }}>{parseFloat(((holding.stake*p)/100).toFixed(4))}%</div>
-                </button>
-              ))}
+              {[25, 50, 75, 100].map(p => {
+                const partialVal = ((holding.stake * p / 100) / 100) * (parseInt(askVal) || nowVal)
+                return (
+                  <button key={p} onClick={() => setSellPct(p)}
+                    style={{ background: sellPct === p ? `linear-gradient(135deg,${C.red},${C.red}cc)` : 'rgba(255,255,255,0.06)',
+                      border: `1.5px solid ${sellPct === p ? 'transparent' : C.border}`,
+                      borderRadius: 10, padding: '12px 4px', cursor: 'pointer', fontFamily: 'inherit',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: sellPct === p ? '#fff' : C.text }}>{p}%</div>
+                    <div style={{ fontSize: 9, color: sellPct === p ? 'rgba(255,255,255,0.7)' : C.muted }}>{fmt(partialVal)}</div>
+                  </button>
+                )
+              })}
             </div>
             <div style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', marginTop: 10, textAlign: 'center', fontSize: 12, color: C.muted }}>
-              Selling <strong style={{ color: C.gold }}>{sellPct}%</strong> of your stake = <strong style={{ color: C.text }}>{stakeToSell}%</strong>
+              Selling <strong style={{ color: C.gold }}>{sellPct}%</strong> of your stake
+              {' · '}Est. payout <strong style={{ color: C.green }}>{fmt(((holding.stake * sellPct / 100) / 100) * (parseInt(askVal) || nowVal))}</strong>
             </div>
           </div>
 
@@ -688,7 +682,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
           </div>
 
           {errors.submit && <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 8, padding: '8px 12px', color: C.red, fontSize: 11, marginBottom: 12 }}>⚠ {errors.submit}</div>}
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, width: '100%', boxSizing: 'border-box' }}>
             <Btn label="← Back" onClick={() => setStep('amount')} outline full />
             <Btn label="Review →" onClick={() => { if (validateBank()) setStep('review') }} full />
           </div>
@@ -727,7 +721,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
           </div>
 
           {errors.submit && <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 8, padding: '8px 12px', color: C.red, fontSize: 11, marginBottom: 12 }}>⚠ {errors.submit}</div>}
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, width: '100%', boxSizing: 'border-box' }}>
             <Btn label="← Edit" onClick={() => setStep('bank')} outline full />
             <Btn label="Submit Sell Request" onClick={submitSell} loading={loading} danger full />
           </div>
@@ -831,16 +825,19 @@ function BuyMoreFlow({ holding, nowVal, adminPhone, user, onClose }) {
       <div style={{ marginBottom: 18 }}>
         <div style={{ fontSize: 10, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 700, marginBottom: 10 }}>How much more to add?</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
-          {[25, 50, 75, 100].map(p => (
-            <button key={p} onClick={() => setAddPct(p)}
-              style={{ background: addPct === p ? `linear-gradient(135deg,${C.green},${C.green}cc)` : 'rgba(255,255,255,0.06)',
-                border: `1.5px solid ${addPct === p ? 'transparent' : C.border}`,
-                borderRadius: 10, padding: '12px 4px', cursor: 'pointer', fontFamily: 'inherit',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-              <div style={{ fontSize: 15, fontWeight: 900, color: addPct === p ? '#fff' : C.text }}>{p}%</div>
-              <div style={{ fontSize: 9, color: addPct === p ? 'rgba(255,255,255,0.7)' : C.muted }}>+{parseFloat(((holding.stake*p)/100).toFixed(4))}%</div>
-            </button>
-          ))}
+          {[25, 50, 75, 100].map(p => {
+            const partialCost = ((holding.stake * p / 100) / 100) * nowVal
+            return (
+              <button key={p} onClick={() => setAddPct(p)}
+                style={{ background: addPct === p ? `linear-gradient(135deg,${C.green},${C.green}cc)` : 'rgba(255,255,255,0.06)',
+                  border: `1.5px solid ${addPct === p ? 'transparent' : C.border}`,
+                  borderRadius: 10, padding: '12px 4px', cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                <div style={{ fontSize: 15, fontWeight: 900, color: addPct === p ? '#fff' : C.text }}>{p}%</div>
+                <div style={{ fontSize: 9, color: addPct === p ? 'rgba(255,255,255,0.7)' : C.muted }}>{fmt(partialCost)}</div>
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -1168,7 +1165,7 @@ function ProfileScreen({ user }) {
               : <div style={{ fontSize: 12, color: C.dim, textAlign: 'center', padding: '8px 0' }}>Add your PAN to complete KYC verification.</div>
             : <div>
               <Field label="PAN Number" value={pan} onChange={v => setPan(v.toUpperCase().slice(0, 10))} placeholder="ABCDE1234F" note="Format: AAAAA0000A" />
-              <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 10, width: '100%', boxSizing: 'border-box' }}>
                 <Btn label="Cancel" onClick={() => setEdit(false)} outline full sm />
                 <Btn label="Save PAN" onClick={savePan} loading={saving} full sm />
               </div>
@@ -1318,7 +1315,7 @@ function AdminCompanies() {
         <Field label="Sector" value={form.sector} onChange={sf('sector')} options={SECTORS} />
         <Field label="Risk Level" value={form.risk} onChange={sf('risk')} options={RISKS} />
         <Field label="Description" value={form.description} onChange={sf('description')} placeholder="About this company…" rows={3} />
-        <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 4, width: '100%', boxSizing: 'border-box' }}>
           <Btn label="Cancel" onClick={() => setSheet(false)} outline full />
           <Btn label={editId ? 'Save Changes' : 'Add Company'} onClick={save} full />
         </div>
@@ -1528,7 +1525,7 @@ function AdminPortfolios() {
         </div>
         <Field label="Amount Invested ₹" value={form.investedAmt} onChange={sf('investedAmt')} type="number" note="Auto-calculated from stake if blank" />
         <Field label="Purchase Date" value={form.purchaseDate} onChange={sf('purchaseDate')} placeholder="2025-01-15" />
-        <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 4, width: '100%', boxSizing: 'border-box' }}>
           <Btn label="Cancel" onClick={() => setSheet(false)} outline full />
           <Btn label="Add Holding" onClick={addHolding} loading={saving} full />
         </div>
@@ -1742,7 +1739,7 @@ function AdminClients() {
         <Field label="City" value={form.city} onChange={sf('city')} placeholder="Mumbai" />
         <Field label="Join Year" value={form.joinDate} onChange={sf('joinDate')} placeholder="2025" />
         <Field label="Welcome Note (shown in client profile)" value={form.welcomeNote} onChange={sf('welcomeNote')} placeholder="Personalized message for this client…" rows={3} />
-        <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 4, width: '100%', boxSizing: 'border-box' }}>
           <Btn label="Cancel" onClick={() => setSheet(false)} outline full />
           <Btn label="Add Client" onClick={addClient} loading={saving} full />
         </div>
