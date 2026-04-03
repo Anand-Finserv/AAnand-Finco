@@ -277,8 +277,7 @@ function LoginScreen() {
           {error && <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 10, padding: '10px 13px', color: C.red, fontSize: 12, marginBottom: 14 }}>⚠️ {error}</div>}
 
           <Btn label="Sign In" onClick={login} loading={loading} full />
-
-       
+          
           </div>
         </div>
         <div style={{ textAlign: 'center', fontSize: 10, color: C.dim, marginTop: 18 }}>🔒 Secured by Firebase Auth · SEBI Compliant</div>
