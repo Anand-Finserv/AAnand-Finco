@@ -9,7 +9,7 @@ import {
   collection, doc, getDoc, getDocs, setDoc, addDoc,
   updateDoc, deleteDoc, query, where, orderBy, Timestamp
 } from 'firebase/firestore'
-
+ 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const fmt   = n => '₹' + new Intl.NumberFormat('en-IN').format(Math.round(n || 0))
 const fmtL  = n => { if (!n) return '₹0'; if (n >= 1e7) return `₹${(n/1e7).toFixed(2)} Cr`; if (n >= 1e5) return `₹${(n/1e5).toFixed(2)} L`; return fmt(n) }
@@ -18,7 +18,7 @@ const gc    = n => n >= 0 ? '#22c55e' : '#ef4444'
 const uid   = () => Math.random().toString(36).slice(2, 10)
 const nowTs = () => new Date().toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
 const ADMIN_EMAIL = 'admin@anandfinco.com'
-
+ 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
   bg:'#070d1a', bg2:'#0c1525', bg3:'#0f1e35',
@@ -29,7 +29,7 @@ const C = {
   red:'#ef4444',   redBg:'rgba(239,68,68,0.1)',
   blue:'#3b82f6',
 }
-
+ 
 // ── CSS inject ────────────────────────────────────────────────────────────────
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap');
@@ -53,7 +53,7 @@ function InjectCSS() {
   }, [])
   return null
 }
-
+ 
 // ── Phone shell ───────────────────────────────────────────────────────────────
 function Shell({ children }) {
   return (
@@ -67,7 +67,7 @@ function Shell({ children }) {
     </div>
   )
 }
-
+ 
 // ── Tiny UI atoms ─────────────────────────────────────────────────────────────
 function Btn({ label, onClick, color, outline, danger, full, sm, disabled, loading, icon }) {
   const bg  = outline ? 'transparent' : (danger ? C.red : (color || C.gold))
@@ -88,7 +88,7 @@ function Btn({ label, onClick, color, outline, danger, full, sm, disabled, loadi
     </button>
   )
 }
-
+ 
 function Field({ label, value, onChange, type = 'text', placeholder, note, rows, options }) {
   const base = {
     width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
@@ -111,7 +111,7 @@ function Field({ label, value, onChange, type = 'text', placeholder, note, rows,
     </div>
   )
 }
-
+ 
 function Card({ children, style = {}, onClick }) {
   return (
     <div onClick={onClick}
@@ -120,7 +120,7 @@ function Card({ children, style = {}, onClick }) {
     </div>
   )
 }
-
+ 
 function Badge({ label, color }) {
   return (
     <span style={{ background: `${color}22`, color, border: `1px solid ${color}44`, borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>
@@ -128,7 +128,7 @@ function Badge({ label, color }) {
     </span>
   )
 }
-
+ 
 function Toast({ msg, type = 'success', onDone }) {
   useEffect(() => { if (!msg) return; const t = setTimeout(onDone, 3000); return () => clearTimeout(t) }, [msg])
   if (!msg) return null
@@ -142,7 +142,7 @@ function Toast({ msg, type = 'success', onDone }) {
     }}>{msg}</div>
   )
 }
-
+ 
 function Sheet({ show, onClose, title, children }) {
   if (!show) return null
   return (
@@ -158,7 +158,7 @@ function Sheet({ show, onClose, title, children }) {
     </div>
   )
 }
-
+ 
 function Confirm({ msg, onYes, onNo }) {
   if (!msg) return null
   return (
@@ -173,7 +173,7 @@ function Confirm({ msg, onYes, onNo }) {
     </div>
   )
 }
-
+ 
 function Empty({ icon, title, sub }) {
   return (
     <div style={{ textAlign: 'center', padding: '48px 20px' }}>
@@ -183,7 +183,7 @@ function Empty({ icon, title, sub }) {
     </div>
   )
 }
-
+ 
 function Loader() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
@@ -192,7 +192,7 @@ function Loader() {
     </div>
   )
 }
-
+ 
 // ── Bottom Nav ────────────────────────────────────────────────────────────────
 function BottomNav({ tabs, active, onChange }) {
   return (
@@ -212,7 +212,7 @@ function BottomNav({ tabs, active, onChange }) {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // LOGIN
 // ─────────────────────────────────────────────────────────────────────────────
@@ -222,7 +222,7 @@ function LoginScreen() {
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoad]  = useState(false)
   const [error, setError]   = useState('')
-
+ 
   async function login() {
     if (!un || !pw) { setError('Enter username and password'); return }
     setLoad(true); setError('')
@@ -241,9 +241,8 @@ function LoginScreen() {
     }
     setLoad(false)
   }
-
  
-
+ 
   return (
     <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, background: `radial-gradient(ellipse at 20% 20%,rgba(201,162,39,0.06) 0%,transparent 60%), radial-gradient(ellipse at 80% 80%,rgba(59,130,246,0.04) 0%,transparent 60%), ${C.bg}` }}>
       <div className="fadeUp" style={{ width: '100%', maxWidth: 390 }}>
@@ -253,12 +252,12 @@ function LoginScreen() {
           <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 26, fontWeight: 800, color: '#e8d5a3' }}>Anand Finco</div>
           <div style={{ fontSize: 10, color: C.muted, letterSpacing: 2.5, marginTop: 5, textTransform: 'uppercase' }}>Private Wealth Management</div>
         </div>
-
+ 
         {/* Card */}
         <div style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 22, padding: 24 }}>
           <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 4 }}>Welcome Back</div>
           <div style={{ fontSize: 12, color: C.muted, marginBottom: 22 }}>Sign in to your investment account</div>
-
+ 
           <Field label="Username" value={un} onChange={setUn} placeholder="e.g. rahul.sharma" />
           <div style={{ marginBottom: 14 }}>
             <div style={{ fontSize: 10, color: '#9ca3af', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 6 }}>Password</div>
@@ -273,11 +272,13 @@ function LoginScreen() {
               </button>
             </div>
           </div>
-
+ 
           {error && <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 10, padding: '10px 13px', color: C.red, fontSize: 12, marginBottom: 14 }}>⚠️ {error}</div>}
-
+ 
           <Btn label="Sign In" onClick={login} loading={loading} full />
-          
+ 
+  
+            ))}
           </div>
         </div>
         <div style={{ textAlign: 'center', fontSize: 10, color: C.dim, marginTop: 18 }}>🔒 Secured by Firebase Auth · SEBI Compliant</div>
@@ -285,7 +286,7 @@ function LoginScreen() {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // CLIENT — HOME
 // ─────────────────────────────────────────────────────────────────────────────
@@ -297,7 +298,7 @@ function HomeScreen({ user }) {
   const [sending,    setSending]    = useState(false)
   const [done,       setDone]       = useState(false)
   const [toast,      setToast]      = useState(null)
-
+ 
   const load = useCallback(async () => {
     try {
       const [coSnap, pdSnap, cfgSnap] = await Promise.all([
@@ -310,15 +311,15 @@ function HomeScreen({ user }) {
       if (cfgSnap.exists()) setAdminPhone(cfgSnap.data().whatsapp || '')
     } catch (e) { console.log('home load:', e.message) }
   }, [user.uid])
-
+ 
   useEffect(() => { load() }, [load])
   useEffect(() => { const t = setInterval(load, 20000); return () => clearInterval(t) }, [load])
-
+ 
   const totI  = portfolio.reduce((s, h) => s + (h.stake / 100) * h.buyValuation, 0)
   const totC  = portfolio.reduce((s, h) => { const co = companies.find(c => c.id === h.companyId); return s + (h.stake / 100) * (co?.currentValuation || h.buyValuation) }, 0)
   const totG  = totC - totI
   const totGP = totI > 0 ? (totG / totI) * 100 : 0
-
+ 
   async function confirmInvest() {
     if (!investing) return
     setSending(true)
@@ -339,13 +340,13 @@ function HomeScreen({ user }) {
     } catch { setToast({ m: 'Could not send request. Try again.', t: 'error' }) }
     setSending(false)
   }
-
+ 
   const riskC = { Low: C.green, Medium: '#f59e0b', High: C.red }
-
+ 
   return (
     <div style={{ flex: 1, overflowY: 'auto' }}>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
-
+ 
       {/* Header */}
       <div style={{ background: 'linear-gradient(160deg,#0c1525,#0f2744)', padding: '52px 20px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
@@ -374,7 +375,7 @@ function HomeScreen({ user }) {
           </div>
         </div>
       </div>
-
+ 
       <div style={{ padding: '20px 18px 30px' }}>
         {/* Active Holdings */}
         <div style={{ fontSize: 17, fontWeight: 800, color: C.text, marginBottom: 14 }}>Active Investments</div>
@@ -400,7 +401,7 @@ function HomeScreen({ user }) {
               </Card>
             )
           })}
-
+ 
         {/* Opportunities */}
         <div style={{ fontSize: 17, fontWeight: 800, color: C.text, marginBottom: 4, marginTop: 26 }}>Opportunities</div>
         <div style={{ fontSize: 11, color: C.muted, marginBottom: 14 }}>Admin curated · Live pricing</div>
@@ -428,7 +429,7 @@ function HomeScreen({ user }) {
             ))}
           </div>}
       </div>
-
+ 
       {/* Invest sheet */}
       <Sheet show={!!investing} onClose={() => { setInvesting(null); setDone(false) }} title={done ? '' : 'Express Interest'}>
         {investing && !done && (
@@ -463,7 +464,7 @@ function HomeScreen({ user }) {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // SELL FLOW  (3 steps: amount → bank → review)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -475,7 +476,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
   const [bank,     setBank]    = useState({ accountName:'', accountNo:'', confirmNo:'', ifsc:'', bankName:'', accountType:'savings' })
   const [errors,   setErrors]  = useState({})
   const [loading,  setLoad]    = useState(false)
-
+ 
   const stakeToSell  = parseFloat(((holding.stake * sellPct) / 100).toFixed(6))
   const askValNum    = parseInt(askVal) || 0
   const invested     = holding.investedAmt || (holding.stake / 100) * holding.buyValuation
@@ -484,7 +485,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
   const gainLoss     = sellValue - sellCost
   const gainPct      = sellCost > 0 ? (gainLoss / sellCost) * 100 : 0
   const currVal      = (holding.stake / 100) * nowVal
-
+ 
   function validateBank() {
     const e = {}
     if (!bank.accountName.trim())                          e.accountName = 'Required'
@@ -495,7 +496,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
     setErrors(e)
     return Object.keys(e).length === 0
   }
-
+ 
   async function submitSell() {
     setLoad(true)
     try {
@@ -540,9 +541,9 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
     } catch (e) { setErrors({ submit: e.message }) }
     setLoad(false)
   }
-
+ 
   const prog = { amount:1, bank:2, review:3, done:4 }[step]
-
+ 
   return (
     <div>
       {/* Progress */}
@@ -566,7 +567,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
           </div>
         </div>
       )}
-
+ 
       {/* STEP 1 — Sell Details */}
       {step === 'amount' && (
         <div>
@@ -582,7 +583,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
               ))}
             </div>
           </div>
-
+ 
           <div style={{ marginBottom: 18 }}>
             <div style={{ fontSize: 10, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 700, marginBottom: 10 }}>How much stake to sell?</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
@@ -605,10 +606,10 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
               {' · '}Est. payout <strong style={{ color: C.green }}>{fmt(((holding.stake * sellPct / 100) / 100) * (parseInt(askVal) || nowVal))}</strong>
             </div>
           </div>
-
+ 
           <Field label="Asking Company Valuation (₹) *" value={askVal} onChange={setAskVal} type="number"
             placeholder={String(nowVal)} note={`Current valuation: ${fmtL(nowVal)} · Set your asking price`} />
-
+ 
           <div style={{ background: gainLoss >= 0 ? C.greenBg : C.redBg, border: `1px solid ${gainLoss >= 0 ? C.green : C.red}44`, borderRadius: 12, padding: 16, marginBottom: 18 }}>
             <div style={{ fontSize: 10, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>Expected Payout Breakdown</div>
             {[['Selling', `${sellPct}% of stake (${stakeToSell}%)`, C.text], ['Your Cost (portion)', fmt(sellCost), C.text2], ['At Asking Valuation', fmtL(askValNum), C.text2], ['Expected Payout', fmt(sellValue), C.gold]].map(([l,v,c]) => (
@@ -623,23 +624,23 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
               <span style={{ fontSize: 16, fontWeight: 900, color: gc(gainLoss) }}>{gainLoss >= 0 ? '+' : ''}{fmt(gainLoss)} ({gainLoss >= 0 ? '+' : ''}{gainPct.toFixed(1)}%)</span>
             </div>
           </div>
-
+ 
           <Field label="Reason for Selling (optional)" value={reason} onChange={setReason} rows={2} placeholder="e.g. Need liquidity, Portfolio rebalancing…" />
-
+ 
           <div style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 10, padding: '10px 13px', marginBottom: 18, fontSize: 11, color: '#f59e0b', lineHeight: 1.7 }}>
             ⏳ Admin finds a buyer from the network. Payout transferred to your bank after buyer confirmation. Typical time: 7–30 days.
           </div>
           <Btn label="Continue to Bank Details →" onClick={() => setStep('bank')} full />
         </div>
       )}
-
+ 
       {/* STEP 2 — Bank Details */}
       {step === 'bank' && (
         <div>
           <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: '10px 13px', marginBottom: 18, fontSize: 11, color: C.gold, lineHeight: 1.7 }}>
             🔒 Bank details are used only for payout. Account number is masked in our records.
           </div>
-
+ 
           <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 12 }}>👤 Account Holder</div>
             <Field label="Full Name (as per bank) *" value={bank.accountName}
@@ -658,7 +659,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
               </div>
             </div>
           </div>
-
+ 
           <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 12 }}>🏦 Bank Account</div>
             <Field label="Bank Name *" value={bank.bankName}
@@ -676,11 +677,11 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
               onChange={v => { setBank(b => ({...b, ifsc:v.toUpperCase().slice(0,11)})); setErrors(e => ({...e, ifsc:null})) }}
               placeholder="SBIN0001234" note={errors.ifsc ? `⚠ ${errors.ifsc}` : '11 characters · On your cheque/passbook'} />
           </div>
-
+ 
           <div style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 10, padding: '10px 13px', marginBottom: 18, fontSize: 11, color: C.blue, lineHeight: 1.7 }}>
             🔐 Account number is masked in storage. Admin initiates NEFT/IMPS after buyer payment clears.
           </div>
-
+ 
           {errors.submit && <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 8, padding: '8px 12px', color: C.red, fontSize: 11, marginBottom: 12 }}>⚠ {errors.submit}</div>}
           <div style={{ display: 'flex', gap: 10, width: '100%', boxSizing: 'border-box' }}>
             <Btn label="← Back" onClick={() => setStep('amount')} outline full />
@@ -688,14 +689,14 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
           </div>
         </div>
       )}
-
+ 
       {/* STEP 3 — Review */}
       {step === 'review' && (
         <div>
           <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 10, padding: '10px 13px', marginBottom: 16, fontSize: 11, color: C.red, lineHeight: 1.7 }}>
             ⚠ Review carefully. Once submitted, request cannot be cancelled without admin approval.
           </div>
-
+ 
           <div style={{ background: C.card, border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 14, marginBottom: 12 }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, marginBottom: 10, textTransform: 'uppercase' }}>📊 Sell Summary</div>
             {[['Company', holding.companyName], ['Selling', `${sellPct}% of stake (${stakeToSell}%)`], ['Asking Valuation', fmtL(askValNum)], ['Expected Payout', fmt(sellValue)], ['Est. Profit/Loss', `${gainLoss >= 0 ? '+' : ''}${fmt(gainLoss)} (${gainLoss >= 0 ? '+' : ''}${gainPct.toFixed(1)}%)`]].map(([l,v], i) => (
@@ -705,7 +706,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
               </div>
             ))}
           </div>
-
+ 
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 16 }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: C.text, marginBottom: 10, textTransform: 'uppercase' }}>🏦 Payout Bank Account</div>
             {[['Account Name', bank.accountName], ['Bank', bank.bankName], ['Account No.', `●●●●${bank.accountNo.slice(-4)}`], ['IFSC', bank.ifsc.toUpperCase()], ['Type', bank.accountType.charAt(0).toUpperCase()+bank.accountType.slice(1)]].map(([l,v]) => (
@@ -715,11 +716,11 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
               </div>
             ))}
           </div>
-
+ 
           <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 10, color: C.muted, lineHeight: 1.8 }}>
             By submitting I confirm: bank details are correct, payout subject to buyer availability (7–30 days), TDS as applicable will be deducted.
           </div>
-
+ 
           {errors.submit && <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 8, padding: '8px 12px', color: C.red, fontSize: 11, marginBottom: 12 }}>⚠ {errors.submit}</div>}
           <div style={{ display: 'flex', gap: 10, width: '100%', boxSizing: 'border-box' }}>
             <Btn label="← Edit" onClick={() => setStep('bank')} outline full />
@@ -727,7 +728,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
           </div>
         </div>
       )}
-
+ 
       {/* STEP 4 — Done */}
       {step === 'done' && (
         <div style={{ textAlign: 'center', padding: '16px 0' }}>
@@ -754,7 +755,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // BUY MORE FLOW
 // ─────────────────────────────────────────────────────────────────────────────
@@ -763,10 +764,10 @@ function BuyMoreFlow({ holding, nowVal, adminPhone, user, onClose }) {
   const [done,     setDone]    = useState(false)
   const [loading,  setLoad]    = useState(false)
   const [toast,    setToast]   = useState(null)
-
+ 
   const addStake = parseFloat(((holding.stake * addPct) / 100).toFixed(6))
   const estCost  = (addStake / 100) * nowVal
-
+ 
   async function submit() {
     setLoad(true)
     try {
@@ -803,7 +804,7 @@ function BuyMoreFlow({ holding, nowVal, adminPhone, user, onClose }) {
     } catch (e) { setToast({ m: e.message, t: 'error' }) }
     setLoad(false)
   }
-
+ 
   if (done) return (
     <div style={{ textAlign: 'center', padding: '20px 0' }}>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
@@ -813,7 +814,7 @@ function BuyMoreFlow({ holding, nowVal, adminPhone, user, onClose }) {
       <Btn label="Close" onClick={onClose} full />
     </div>
   )
-
+ 
   return (
     <div>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
@@ -821,7 +822,7 @@ function BuyMoreFlow({ holding, nowVal, adminPhone, user, onClose }) {
         <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 3 }}>{holding.companyName}</div>
         <div style={{ fontSize: 11, color: C.muted }}>Current stake: {holding.stake}% · Valuation: {fmtL(nowVal)}</div>
       </div>
-
+ 
       <div style={{ marginBottom: 18 }}>
         <div style={{ fontSize: 10, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 700, marginBottom: 10 }}>How much more to add?</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
@@ -840,7 +841,7 @@ function BuyMoreFlow({ holding, nowVal, adminPhone, user, onClose }) {
           })}
         </div>
       </div>
-
+ 
       <div style={{ background: C.greenBg, border: `1px solid ${C.green}33`, borderRadius: 12, padding: 14, marginBottom: 18 }}>
         {[['Adding', `${addPct}% more (+${addStake}% stake)`], ['At Valuation', fmtL(nowVal)], ['Est. Investment', fmt(estCost)]].map(([l,v], i) => (
           <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: i < 2 ? `1px solid rgba(34,197,94,0.1)` : 'none' }}>
@@ -853,7 +854,7 @@ function BuyMoreFlow({ holding, nowVal, adminPhone, user, onClose }) {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // CLIENT — PORTFOLIO
 // ─────────────────────────────────────────────────────────────────────────────
@@ -865,7 +866,7 @@ function PortfolioScreen({ user }) {
   const [selected,    setSelected]    = useState(null)   // expanded holding index
   const [activeSheet, setActiveSheet] = useState(null)   // 'sell' | 'buyMore'
   const [toast,       setToast]       = useState(null)
-
+ 
   function load() {
     Promise.all([
       getDoc(doc(db, 'portfolios', user.uid)),
@@ -877,9 +878,9 @@ function PortfolioScreen({ user }) {
       if (cfg.exists()) setAdminPhone(cfg.data().whatsapp || '')
     }).catch(() => {}).finally(() => setLoading(false))
   }
-
+ 
   useEffect(() => { load() }, [user.uid])
-
+ 
   const enriched = holdings.map(h => {
     const co   = companies.find(c => c.id === h.companyId)
     const nowV = co?.currentValuation || h.buyValuation
@@ -894,20 +895,20 @@ function PortfolioScreen({ user }) {
   const totC = enriched.reduce((s, h) => s + h.curr, 0)
   const totG = totC - totI
   const totP = totI > 0 ? (totG / totI) * 100 : 0
-
+ 
   const selH = selected !== null ? enriched[selected] : null
-
+ 
   if (loading) return <Loader />
-
+ 
   return (
     <div style={{ flex: 1, overflowY: 'auto' }}>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
-
+ 
       <div style={{ background: C.bg2, padding: '52px 18px 18px', borderBottom: `1px solid ${C.border}` }}>
         <div style={{ fontSize: 24, fontWeight: 900, color: C.text }}>My Portfolio</div>
         <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{enriched.length} holdings · Tap a card to buy / sell</div>
       </div>
-
+ 
       <div style={{ padding: '18px 18px 40px' }}>
         {/* Summary */}
         <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 18, marginBottom: 22 }}>
@@ -920,7 +921,7 @@ function PortfolioScreen({ user }) {
             ))}
           </div>
         </div>
-
+ 
         {/* Sector bars */}
         {enriched.length > 0 && (() => {
           const sectors = enriched.reduce((a, h) => { a[h.sector] = (a[h.sector] || 0) + h.curr; return a }, {})
@@ -944,9 +945,9 @@ function PortfolioScreen({ user }) {
             </div>
           )
         })()}
-
+ 
         {enriched.length === 0 && <Empty icon="📊" title="No holdings yet" sub="Your portfolio will appear here once your advisor adds your investments" />}
-
+ 
         {/* Holdings */}
         {enriched.map((h, i) => {
           const isOpen = selected === i
@@ -986,7 +987,7 @@ function PortfolioScreen({ user }) {
                   {isOpen ? '▲ tap to collapse' : '▼ tap to sell / buy more'}
                 </div>
               </div>
-
+ 
               {/* Action panel */}
               {isOpen && (
                 <div style={{ background: 'rgba(10,18,34,0.97)', border: `1px solid ${C.goldBd}`, borderTop: 'none', borderRadius: '0 0 16px 16px', padding: 16 }}>
@@ -1013,7 +1014,7 @@ function PortfolioScreen({ user }) {
           )
         })}
       </div>
-
+ 
       {/* Sell Sheet */}
       <Sheet show={activeSheet === 'sell'} onClose={() => setActiveSheet(null)} title={`Sell Stake — ${selH?.companyName || ''}`}>
         {selH && (
@@ -1022,7 +1023,7 @@ function PortfolioScreen({ user }) {
             onSuccess={() => { setToast({ m: '✅ Sell request submitted!' }); load() }} />
         )}
       </Sheet>
-
+ 
       {/* Buy More Sheet */}
       <Sheet show={activeSheet === 'buyMore'} onClose={() => setActiveSheet(null)} title={`Buy More — ${selH?.companyName || ''}`}>
         {selH && (
@@ -1033,7 +1034,7 @@ function PortfolioScreen({ user }) {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // CLIENT — NEWS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1045,7 +1046,7 @@ const NEWS_DATA = [
   { id:5, tag:'Unlisted', color:'#f59e0b', time:'5h ago',  live:false, title:'SEBI tightens norms for unlisted public companies', body:'Half-yearly financials now mandatory for companies with over ₹10 Cr paid-up capital.' },
   { id:6, tag:'Markets',  color:'#3b82f6', time:'7h ago',  live:false, title:'FPI inflows cross ₹25,000 Cr in equities this month', body:'Sustained foreign buying driven by India\'s macro stability. Rupee strengthens to 83.2.' },
 ]
-
+ 
 function NewsScreen() {
   const [filter, setFilter] = useState('All')
   const filters = ['All', 'Markets', 'Bonds', 'Unlisted', 'Economy']
@@ -1083,7 +1084,7 @@ function NewsScreen() {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // CLIENT — PROFILE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1092,7 +1093,7 @@ function ProfileScreen({ user }) {
   const [editing, setEdit]  = useState(false)
   const [saving, setSave]   = useState(false)
   const [toast, setToast]   = useState(null)
-
+ 
   async function savePan() {
     const v = pan.toUpperCase()
     if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(v)) { setToast({ m: 'Invalid PAN. Format: ABCDE1234F', t: 'error' }); return }
@@ -1103,7 +1104,7 @@ function ProfileScreen({ user }) {
     } catch { setToast({ m: 'Could not save PAN', t: 'error' }) }
     setSave(false)
   }
-
+ 
   return (
     <div style={{ flex: 1, overflowY: 'auto' }}>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
@@ -1120,7 +1121,7 @@ function ProfileScreen({ user }) {
           <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{user.email}</div>
           <div style={{ marginTop: 10, display: 'inline-block', background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 20, padding: '4px 16px', fontSize: 11, color: C.gold, fontWeight: 700 }}>✦ Premium Member</div>
         </div>
-
+ 
         {/* Welcome note */}
         {user.welcomeNote && (
           <Card style={{ marginBottom: 14, background: '#0f2031', border: `1px solid ${C.goldBd}` }}>
@@ -1128,7 +1129,7 @@ function ProfileScreen({ user }) {
             <div style={{ fontSize: 13, color: C.text2, lineHeight: 1.7, fontStyle: 'italic' }}>"{user.welcomeNote}"</div>
           </Card>
         )}
-
+ 
         {/* Info */}
         <Card style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 11, color: C.muted, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 14 }}>Personal Information</div>
@@ -1142,7 +1143,7 @@ function ProfileScreen({ user }) {
             </div>
           ))}
         </Card>
-
+ 
         {/* PAN */}
         <Card style={{ marginBottom: 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
@@ -1172,7 +1173,7 @@ function ProfileScreen({ user }) {
             </div>
           }
         </Card>
-
+ 
         <button onClick={() => signOut(auth)}
           style={{ width: '100%', background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 14, padding: 15, color: C.red, fontWeight: 800, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit' }}>
           🚪 Sign Out
@@ -1182,14 +1183,14 @@ function ProfileScreen({ user }) {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMIN — COMPANIES
 // ─────────────────────────────────────────────────────────────────────────────
 const SECTORS = ['Technology','Healthcare','Logistics','Infrastructure','Renewables','Finance','FMCG','Real Estate','Others']
 const RISKS   = ['Low','Medium','High']
 const BLANK_CO = { name:'', sector:'Technology', minInvest:'', currentValuation:'', initialValuation:'', expectedReturns:'', risk:'Medium', lotSize:'0.5% / lot', active:true, description:'' }
-
+ 
 function AdminCompanies() {
   const [companies, setCompanies] = useState([])
   const [sheet, setSheet]         = useState(false)
@@ -1199,13 +1200,13 @@ function AdminCompanies() {
   const [confirm, setConfirm]     = useState(null)
   const [toast, setToast]         = useState(null)
   const sf = k => v => setForm(p => ({ ...p, [k]: v }))
-
+ 
   const load = useCallback(async () => {
     const snap = await getDocs(collection(db, 'companies'))
     setCompanies(snap.docs.map(d => ({ id: d.id, ...d.data() })))
   }, [])
   useEffect(() => { load() }, [load])
-
+ 
   async function save() {
     if (!form.name.trim() || !form.minInvest || !form.currentValuation) {
       setToast({ m: 'Name, min investment and valuation required', t: 'error' }); return
@@ -1218,7 +1219,7 @@ function AdminCompanies() {
       setSheet(false); setEditId(null); setForm(BLANK_CO); load()
     } catch { setToast({ m: 'Save failed', t: 'error' }) }
   }
-
+ 
   async function updateVal(co) {
     const nv = parseInt(valMap[co.id])
     if (!nv || nv < 100) { setToast({ m: 'Enter a valid valuation', t: 'error' }); return }
@@ -1226,28 +1227,28 @@ function AdminCompanies() {
     setToast({ m: `${co.name} → ${fmtL(nv)} ✨ All portfolios updated live!` })
     setValMap(p => ({ ...p, [co.id]: '' })); load()
   }
-
+ 
   async function toggleActive(co) {
     await updateDoc(doc(db, 'companies', co.id), { active: !co.active }); load()
   }
-
+ 
   async function doDelete() {
     await deleteDoc(doc(db, 'companies', confirm.id))
     setToast({ m: 'Deleted' }); setConfirm(null); load()
   }
-
+ 
   function startEdit(co) {
     setForm({ ...co, minInvest: String(co.minInvest), currentValuation: String(co.currentValuation), initialValuation: String(co.initialValuation || co.currentValuation) })
     setEditId(co.id); setSheet(true)
   }
-
+ 
   const riskC = { Low: C.green, Medium: '#f59e0b', High: C.red }
-
+ 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
       <Confirm msg={confirm?.msg} onYes={doDelete} onNo={() => setConfirm(null)} />
-
+ 
       <div style={{ background: C.bg2, padding: '52px 18px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
         <div>
           <div style={{ fontSize: 22, fontWeight: 900, color: C.text }}>Companies</div>
@@ -1255,7 +1256,7 @@ function AdminCompanies() {
         </div>
         <Btn label="+ Add" onClick={() => { setForm(BLANK_CO); setEditId(null); setSheet(true) }} sm />
       </div>
-
+ 
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
         {companies.length === 0 && <Empty icon="🏢" title="No companies yet" sub="Tap + Add to create your first opportunity" />}
         {companies.map(co => (
@@ -1303,7 +1304,7 @@ function AdminCompanies() {
           </Card>
         ))}
       </div>
-
+ 
       <Sheet show={sheet} onClose={() => setSheet(false)} title={editId ? 'Edit Company' : 'Add New Company'}>
         <Field label="Company Name *" value={form.name} onChange={sf('name')} placeholder="XYZ Technologies Pvt Ltd" />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -1323,14 +1324,14 @@ function AdminCompanies() {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMIN — NOTIFICATIONS
 // ─────────────────────────────────────────────────────────────────────────────
 function AdminNotifications() {
   const [notifs, setNotifs]     = useState([])
   const [loading, setLoading]   = useState(true)
-
+ 
   const load = useCallback(async () => {
     try {
       const snap = await getDocs(query(collection(db, 'notifications'), orderBy('timestamp', 'desc')))
@@ -1338,23 +1339,23 @@ function AdminNotifications() {
     } catch (e) { console.log('notifs:', e.message) }
     setLoading(false)
   }, [])
-
+ 
   useEffect(() => { load(); const t = setInterval(load, 20000); return () => clearInterval(t) }, [load])
-
+ 
   async function markRead(n) {
     if (n.read) return
     await updateDoc(doc(db, 'notifications', n.id), { read: true }); load()
   }
-
+ 
   function openWA(n) {
     const ph = (n.clientPhone || '').replace(/\D/g, '')
     if (!ph || ph === 'NA') return
     const msg = encodeURIComponent(`Hello ${n.clientName}! 👋\n\nThis is Team Anand Finco. We received your interest in *${n.companyName}*.\n\nLet's connect to discuss the investment details!\n\n– Anand Finco`)
     window.open(`https://wa.me/${ph}?text=${msg}`, '_blank')
   }
-
+ 
   const unread = notifs.filter(n => !n.read).length
-
+ 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div style={{ background: C.bg2, padding: '52px 18px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
@@ -1398,7 +1399,7 @@ function AdminNotifications() {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMIN — PORTFOLIOS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1413,20 +1414,20 @@ function AdminPortfolios() {
   const [saving,    setSaving]    = useState(false)
   const [form, setForm] = useState({ companyId: '', stake: '1', buyValuation: '', investedAmt: '', purchaseDate: new Date().toISOString().split('T')[0] })
   const sf = k => v => setForm(p => ({ ...p, [k]: v }))
-
+ 
   useEffect(() => {
     Promise.all([getDocs(collection(db, 'clients')), getDocs(collection(db, 'companies'))]).then(([cs, cos]) => {
       setClients(cs.docs.map(d => ({ id: d.id, ...d.data() })).filter(c => c.email !== ADMIN_EMAIL))
       setCompanies(cos.docs.map(d => ({ id: d.id, ...d.data() })))
     })
   }, [])
-
+ 
   async function selectClient(c) {
     setSelected(c)
     const snap = await getDoc(doc(db, 'portfolios', c.id))
     setHoldings(snap.exists() ? snap.data().holdings || [] : [])
   }
-
+ 
   async function addHolding() {
     const co = companies.find(c => c.id === form.companyId)
     if (!co || !form.stake || !form.buyValuation) { setToast({ m: 'Select company, stake and valuation', t: 'error' }); return }
@@ -1442,13 +1443,13 @@ function AdminPortfolios() {
     } catch { setToast({ m: 'Save failed', t: 'error' }) }
     setSaving(false)
   }
-
+ 
   async function removeHolding() {
     const next = holdings.filter((_, i) => i !== confirm.idx)
     await setDoc(doc(db, 'portfolios', selected.id), { holdings: next })
     setHoldings(next); setConfirm(null); setToast({ m: 'Removed' })
   }
-
+ 
   if (!selected) return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div style={{ background: C.bg2, padding: '52px 18px 18px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
@@ -1470,7 +1471,7 @@ function AdminPortfolios() {
       </div>
     </div>
   )
-
+ 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
@@ -1533,7 +1534,7 @@ function AdminPortfolios() {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMIN — SELL REQUESTS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1541,7 +1542,7 @@ function AdminSellRequests() {
   const [reqs,  setReqs]  = useState([])
   const [toast, setToast] = useState(null)
   const [conf,  setConf]  = useState(null)
-
+ 
   const load = useCallback(async () => {
     try {
       const snap = await getDocs(query(collection(db, 'sellRequests'), orderBy('timestamp', 'desc')))
@@ -1549,7 +1550,7 @@ function AdminSellRequests() {
     } catch (e) { console.log('sell reqs:', e.message) }
   }, [])
   useEffect(() => { load() }, [load])
-
+ 
   async function approve(r) {
     try {
       await updateDoc(doc(db, 'sellRequests', r.id), { status: 'approved', read: true })
@@ -1562,18 +1563,18 @@ function AdminSellRequests() {
       }
     } catch (e) { setToast({ m: e.message, t: 'error' }) }
   }
-
+ 
   async function reject(r) {
     try {
       await updateDoc(doc(db, 'sellRequests', r.id), { status: 'rejected', read: true })
       setToast({ m: 'Request rejected' }); setConf(null); load()
     } catch (e) { setToast({ m: e.message, t: 'error' }) }
   }
-
+ 
   const pending  = reqs.filter(r => r.status === 'pending')
   const resolved = reqs.filter(r => r.status !== 'pending')
   const unread   = pending.filter(r => !r.read).length
-
+ 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
@@ -1587,7 +1588,7 @@ function AdminSellRequests() {
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
         {reqs.length === 0 && <Empty icon="📤" title="No sell requests" sub="When clients submit sell requests, they appear here." />}
-
+ 
         {pending.length > 0 && <>
           <div style={{ fontSize: 10, color: C.red, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>⏳ Pending ({pending.length})</div>
           {pending.map(r => (
@@ -1640,7 +1641,7 @@ function AdminSellRequests() {
             </div>
           ))}
         </>}
-
+ 
         {resolved.length > 0 && <>
           <div style={{ fontSize: 10, color: C.muted, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', margin: '14px 0 10px' }}>History</div>
           {resolved.map(r => (
@@ -1657,7 +1658,7 @@ function AdminSellRequests() {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMIN — CLIENTS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1668,13 +1669,13 @@ function AdminClients() {
   const [toast, setToast]       = useState(null)
   const [form, setForm]         = useState({ name: '', username: '', password: '', phone: '', email: '', city: '', joinDate: String(new Date().getFullYear()), welcomeNote: '' })
   const sf = k => v => setForm(p => ({ ...p, [k]: v }))
-
+ 
   const load = useCallback(async () => {
     const snap = await getDocs(collection(db, 'clients'))
     setClients(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(c => c.email !== ADMIN_EMAIL))
   }, [])
   useEffect(() => { load() }, [load])
-
+ 
   async function addClient() {
     if (!form.name || !form.username || !form.password) { setToast({ m: 'Name, username and password required', t: 'error' }); return }
     if (form.password.length < 6) { setToast({ m: 'Password must be at least 6 characters', t: 'error' }); return }
@@ -1695,13 +1696,13 @@ function AdminClients() {
     }
     setSaving(false)
   }
-
+ 
   function openWA(c) {
     if (!c.phone) return
     const msg = encodeURIComponent(`Hello ${c.name}! 👋 Team Anand Finco here. Let's connect! – Anand Finco`)
     window.open(`https://wa.me/${c.phone.replace(/\D/g, '')}?text=${msg}`, '_blank')
   }
-
+ 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
@@ -1747,7 +1748,7 @@ function AdminClients() {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMIN — SETTINGS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1755,11 +1756,11 @@ function AdminSettings({ user }) {
   const [waNum, setWaNum]   = useState('')
   const [saving, setSaving] = useState(false)
   const [toast, setToast]   = useState(null)
-
+ 
   useEffect(() => {
     getDoc(doc(db, 'adminConfig', 'main')).then(s => { if (s.exists()) setWaNum(s.data().whatsapp || '') }).catch(() => {})
   }, [])
-
+ 
   async function save() {
     const clean = waNum.replace(/\D/g, '')
     if (clean.length < 10) { setToast({ m: 'Enter a valid phone number with country code', t: 'error' }); return }
@@ -1770,7 +1771,7 @@ function AdminSettings({ user }) {
     } catch { setToast({ m: 'Save failed. Check Firestore rules.', t: 'error' }) }
     setSaving(false)
   }
-
+ 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
@@ -1787,7 +1788,7 @@ function AdminSettings({ user }) {
             <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>{user?.email}</div>
           </div>
         </div>
-
+ 
         {/* WhatsApp */}
         <Card style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 6 }}>💬 WhatsApp Notification Number</div>
@@ -1797,7 +1798,7 @@ function AdminSettings({ user }) {
           <Field label="Your WhatsApp Number" value={waNum} onChange={setWaNum} placeholder="919876543210" note="Country code + number, no spaces. Example: 919876543210" />
           <Btn label={saving ? 'Saving…' : 'Save Number'} onClick={save} loading={saving} full />
         </Card>
-
+ 
         {/* Firestore rules */}
         <Card style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 10 }}>🔐 Firestore Security Rules</div>
@@ -1842,14 +1843,14 @@ service cloud.firestore {
 }`}</pre>
           </div>
         </Card>
-
+ 
         <Btn label="🚪  Sign Out" onClick={() => signOut(auth)} danger full />
         <div style={{ textAlign: 'center', fontSize: 10, color: C.dim, marginTop: 18, lineHeight: 1.7 }}>Anand Finco Pvt Ltd · SEBI Registered Investment Advisor · © 2025</div>
       </div>
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // CLIENT APP SHELL
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1873,14 +1874,14 @@ function ClientApp({ user }) {
     </>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMIN APP SHELL
 // ─────────────────────────────────────────────────────────────────────────────
 function AdminApp({ user }) {
   const [tab, setTab]     = useState('companies')
   const [unread, setUnread] = useState(0)
-
+ 
   useEffect(() => {
     const check = async () => {
       try {
@@ -1890,7 +1891,7 @@ function AdminApp({ user }) {
     }
     check(); const t = setInterval(check, 20000); return () => clearInterval(t)
   }, [])
-
+ 
   const TABS = [
     { id: 'companies',  icon: '🏢', label: 'Companies' },
     { id: 'portfolios', icon: '📊', label: 'Portfolios' },
@@ -1913,14 +1914,14 @@ function AdminApp({ user }) {
     </>
   )
 }
-
+ 
 // ─────────────────────────────────────────────────────────────────────────────
 // ROOT
 // ─────────────────────────────────────────────────────────────────────────────
 export default function App() {
   const [user,    setUser]    = useState(undefined) // undefined = loading
   const [profile, setProfile] = useState(null)
-
+ 
   useEffect(() => {
     return onAuthStateChanged(auth, async fbUser => {
       if (fbUser) {
@@ -1939,7 +1940,7 @@ export default function App() {
       }
     })
   }, [])
-
+ 
   return (
     <>
       <InjectCSS />
@@ -1956,4 +1957,3 @@ export default function App() {
     </>
   )
 }
-
