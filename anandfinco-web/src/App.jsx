@@ -366,7 +366,15 @@ function LoginScreen() {
             {error && <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 10, padding: '10px 13px', color: C.red, fontSize: 12, marginBottom: 14 }}>⚠️ {error}</div>}
 
             <Btn label="Sign In" onClick={login} loading={loading} full />
-
+ {/* Demo */}
+            <div style={{ marginTop: 18, background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 14 }}>
+              <div style={{ fontSize: 11, color: C.gold, fontWeight: 800, marginBottom: 10 }}>Demo Credentials — tap to fill</div>
+              {[['Admin', 'admin', 'admin@2025'], ['Client 1', 'rahul.sharma', 'client123'], ['Client 2', 'priya.patel', 'client456']].map(([r, u, p]) => (
+                <div key={u} onClick={() => fill(u, p)}
+                  style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: `1px solid ${C.border}`, cursor: 'pointer' }}>
+                  <span style={{ fontSize: 11, color: C.muted }}>{r}</span>
+                  <span style={{ fontSize: 11, color: C.text2, fontWeight: 600 }}>{u} / {p}</span>
+                </div>
               ))}
             </div>
           </div>
