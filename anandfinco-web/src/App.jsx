@@ -14,20 +14,20 @@ import {
 const fmt   = n => '₹' + new Intl.NumberFormat('en-IN').format(Math.round(n || 0))
 const fmtL  = n => { if (!n) return '₹0'; if (n >= 1e7) return `₹${(n/1e7).toFixed(2)} Cr`; if (n >= 1e5) return `₹${(n/1e5).toFixed(2)} L`; return fmt(n) }
 const pct   = n => (n >= 0 ? '+' : '') + (n || 0).toFixed(2) + '%'
-const gc    = n => n >= 0 ? '#22c55e' : '#ef4444'
+const gc    = n => n >= 0 ? C.green : C.red
 const uid   = () => Math.random().toString(36).slice(2, 10)
 const nowTs = () => new Date().toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
 const ADMIN_EMAIL = 'admin@anandfinco.com'
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
-  bg:'#070d1a', bg2:'#0c1525', bg3:'#0f1e35',
-  gold:'#c9a227', goldL:'#e6c96b', goldBg:'rgba(201,162,39,0.08)', goldBd:'rgba(201,162,39,0.22)',
-  text:'#f1f5f9', text2:'#cbd5e1', muted:'#6b7280', dim:'#374151',
-  card:'rgba(255,255,255,0.045)', border:'rgba(255,255,255,0.08)',
-  green:'#22c55e', greenBg:'rgba(34,197,94,0.1)', greenBd:'rgba(34,197,94,0.28)',
-  red:'#ef4444',   redBg:'rgba(239,68,68,0.1)',   redBd:'rgba(239,68,68,0.28)',
-  blue:'#3b82f6',
+  bg:'#f6f8f7', bg2:'#ffffff', bg3:'#eef5f1',
+  gold:'#00b386', goldL:'#00d09c', goldBg:'rgba(0,179,134,0.08)', goldBd:'rgba(0,179,134,0.24)',
+  text:'#0f1512', text2:'#3d4a45', muted:'#6b7670', dim:'#aab4ae',
+  card:'#ffffff', border:'rgba(15,23,32,0.09)',
+  green:'#16a34a', greenBg:'rgba(22,163,74,0.09)', greenBd:'rgba(22,163,74,0.26)',
+  red:'#e11d48',   redBg:'rgba(225,29,72,0.08)',    redBd:'rgba(225,29,72,0.24)',
+  blue:'#2563eb',
 }
 
 // ── CSS inject ────────────────────────────────────────────────────────────────
@@ -35,7 +35,7 @@ const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'DM Sans',sans-serif;background:${C.bg};color:${C.text};height:100dvh;overflow:hidden}
-#root{height:100dvh;display:flex;flex-direction:column;align-items:center;background:#040609}
+#root{height:100dvh;display:flex;flex-direction:column;align-items:center;background:#e7edea}
 input::placeholder,textarea::placeholder{color:${C.dim}}
 input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 select option{background:${C.bg2}}
@@ -43,7 +43,7 @@ select option{background:${C.bg2}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 @keyframes floatOrb1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(24px,-30px) scale(1.15)}}
 @keyframes floatOrb2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-28px,26px) scale(1.1)}}
-@keyframes glowPulse{0%,100%{box-shadow:0 12px 40px rgba(201,162,39,0.35)}50%{box-shadow:0 18px 64px rgba(201,162,39,0.6)}}
+@keyframes glowPulse{0%,100%{box-shadow:0 12px 40px rgba(0,179,134,0.28)}50%{box-shadow:0 18px 64px rgba(0,179,134,0.5)}}
 @keyframes logoIn{0%{opacity:0;transform:scale(0.6) rotate(-12deg)}60%{opacity:1;transform:scale(1.08) rotate(3deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
 @keyframes shimmerSweep{0%{background-position:-200% 0}100%{background-position:200% 0}}
 @keyframes cardIn{from{opacity:0;transform:translateY(22px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -53,7 +53,7 @@ select option{background:${C.bg2}}
 .orb2{animation:floatOrb2 9s ease-in-out infinite}
 .logoAnim{animation:logoIn .9s cubic-bezier(.34,1.56,.64,1) both, glowPulse 3.2s ease-in-out infinite .9s}
 .cardAnim{animation:cardIn .6s cubic-bezier(.22,1,.36,1) .15s both}
-.shimmerText{background:linear-gradient(90deg,#e8d5a3 0%,#fff6da 25%,#e8d5a3 50%,#c9a227 75%,#e8d5a3 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmerSweep 4s linear infinite}
+.shimmerText{background:linear-gradient(90deg,#0f7a5c 0%,#00d09c 25%,#0f7a5c 50%,#00b386 75%,#0f7a5c 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmerSweep 4s linear infinite}
 `
 function InjectCSS() {
   useEffect(() => {
@@ -82,7 +82,7 @@ function Shell({ children }) {
 // ── Tiny UI atoms ─────────────────────────────────────────────────────────────
 function Btn({ label, onClick, color, outline, danger, full, sm, disabled, loading, icon }) {
   const bg  = outline ? 'transparent' : (danger ? C.red : (color || C.gold))
-  const tc  = outline ? (danger ? C.red : (color || C.gold)) : (danger ? '#fff' : '#0a0f1e')
+  const tc  = outline ? (danger ? C.red : (color || C.gold)) : (danger ? '#fff' : '#ffffff')
   const bdc = outline ? `${danger ? C.red : (color || C.gold)}55` : 'transparent'
   return (
     <button onClick={onClick} disabled={disabled || loading}
@@ -92,7 +92,8 @@ function Btn({ label, onClick, color, outline, danger, full, sm, disabled, loadi
         fontWeight: 800, fontSize: sm ? 12 : 14, cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled || loading ? 0.55 : 1, display: 'flex', alignItems: 'center',
         justifyContent: 'center', gap: 6, width: full ? '100%' : 'auto',
-        fontFamily: 'inherit', flexShrink: 0, transition: 'opacity .15s',
+        flex: full ? '1 1 0%' : '0 0 auto', minWidth: 0, boxSizing: 'border-box',
+        fontFamily: 'inherit', transition: 'opacity .15s', whiteSpace: 'nowrap',
       }}>
       {icon && <span>{icon}</span>}
       {loading ? '…' : label}
@@ -102,13 +103,13 @@ function Btn({ label, onClick, color, outline, danger, full, sm, disabled, loadi
 
 function Field({ label, value, onChange, type = 'text', placeholder, note, rows, options }) {
   const base = {
-    width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+    width: '100%', background: 'rgba(15,23,32,0.06)', border: '1px solid rgba(15,23,32,0.12)',
     borderRadius: 10, padding: '10px 13px', color: C.text, fontSize: 14,
     outline: 'none', fontFamily: 'inherit',
   }
   return (
     <div style={{ marginBottom: 14 }}>
-      {label && <div style={{ fontSize: 10, color: '#9ca3af', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>}
+      {label && <div style={{ fontSize: 10, color: '#5b665f', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>}
       {options
         ? <select value={value} onChange={e => onChange(e.target.value)} style={base}>
             {options.map(o => <option key={o} value={o}>{o}</option>)}
@@ -159,10 +160,10 @@ function Sheet({ show, onClose, title, children }) {
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <div onClick={e => e.stopPropagation()}
-        style={{ width: '100%', maxWidth: 430, background: '#0c1829', borderTopLeftRadius: 24, borderTopRightRadius: 24, border: '1px solid rgba(255,255,255,0.08)', maxHeight: '90dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        style={{ width: '100%', maxWidth: 430, background: '#ffffff', borderTopLeftRadius: 24, borderTopRightRadius: 24, border: '1px solid rgba(15,23,32,0.08)', maxHeight: '90dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 -8px 40px rgba(15,23,32,0.15)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 20px 14px', flexShrink: 0 }}>
           <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>{title}</div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: 8, width: 30, height: 30, color: C.muted, fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>×</button>
+          <button onClick={onClose} style={{ background: 'rgba(15,23,32,0.07)', border: 'none', borderRadius: 8, width: 30, height: 30, color: C.muted, fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>×</button>
         </div>
         <div style={{ overflowY: 'auto', overflowX: 'hidden', padding: '0 20px 24px', width: '100%', boxSizing: 'border-box' }}>{children}</div>
       </div>
@@ -242,7 +243,7 @@ function ValueRangeBar({ entry, current, peak }) {
   const isUp = current >= entry
   const showPeak = peak > entry + entry * 0.001 && Math.abs(peak - current) > peak * 0.001
   return (
-    <div style={{ position: 'relative', height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, margin: '20px 4px 26px' }}>
+    <div style={{ position: 'relative', height: 6, background: 'rgba(15,23,32,0.08)', borderRadius: 99, margin: '20px 4px 26px' }}>
       <div style={{ position: 'absolute', left: `${Math.min(pE, pC)}%`, width: `${Math.abs(pC - pE)}%`, height: '100%', background: isUp ? C.green : C.red, opacity: 0.45, borderRadius: 99 }} />
       <div style={{ position: 'absolute', left: `${pE}%`, top: -15, transform: 'translateX(-50%)', fontSize: 8, color: C.muted, whiteSpace: 'nowrap' }}>Entry</div>
       <div style={{ position: 'absolute', left: `${pE}%`, top: 0, width: 2, height: 6, background: C.muted, transform: 'translateX(-50%)' }} />
@@ -250,7 +251,7 @@ function ValueRangeBar({ entry, current, peak }) {
         <div style={{ position: 'absolute', left: `${pP}%`, top: -15, transform: 'translateX(-50%)', fontSize: 8, color: C.gold, whiteSpace: 'nowrap' }}>Peak</div>
         <div style={{ position: 'absolute', left: `${pP}%`, top: -3, width: 2, height: 12, background: C.gold, transform: 'translateX(-50%)' }} />
       </>}
-      <div style={{ position: 'absolute', left: `${pC}%`, top: '50%', width: 13, height: 13, borderRadius: '50%', background: isUp ? C.green : C.red, border: '2px solid #0c1525', transform: 'translate(-50%,-50%)', boxShadow: `0 0 10px ${isUp ? C.green : C.red}99` }} />
+      <div style={{ position: 'absolute', left: `${pC}%`, top: '50%', width: 13, height: 13, borderRadius: '50%', background: isUp ? C.green : C.red, border: '2px solid #ffffff', transform: 'translate(-50%,-50%)', boxShadow: `0 0 10px ${isUp ? C.green : C.red}99` }} />
     </div>
   )
 }
@@ -280,7 +281,7 @@ function CountUp({ value, format }) {
 // ── Bottom Nav ────────────────────────────────────────────────────────────────
 function BottomNav({ tabs, active, onChange }) {
   return (
-    <div style={{ height: 64, background: 'rgba(8,17,31,0.98)', borderTop: `1px solid ${C.border}`, display: 'flex', flexShrink: 0, position: 'relative', zIndex: 10 }}>
+    <div style={{ height: 64, background: '#ffffff', borderTop: `1px solid ${C.border}`, display: 'flex', flexShrink: 0, position: 'relative', zIndex: 10, boxShadow: '0 -2px 12px rgba(15,23,32,0.05)' }}>
       {tabs.map(t => {
         const on = active === t.id
         return (
@@ -331,7 +332,7 @@ function LoginScreen() {
   return (
     <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, background: C.bg }}>
       {/* Animated background blobs */}
-      <div className="orb1" style={{ position: 'absolute', top: '8%', left: '-10%', width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(circle,rgba(201,162,39,0.20) 0%,transparent 70%)', filter: 'blur(30px)', pointerEvents: 'none' }} />
+      <div className="orb1" style={{ position: 'absolute', top: '8%', left: '-10%', width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(circle,rgba(0,179,134,0.20) 0%,transparent 70%)', filter: 'blur(30px)', pointerEvents: 'none' }} />
       <div className="orb2" style={{ position: 'absolute', bottom: '10%', right: '-12%', width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle,rgba(59,130,246,0.16) 0%,transparent 70%)', filter: 'blur(34px)', pointerEvents: 'none' }} />
 
       <div style={{ width: '100%', maxWidth: 390, position: 'relative', zIndex: 1 }}>
@@ -343,19 +344,19 @@ function LoginScreen() {
         </div>
 
         {/* Card */}
-        <div className="cardAnim" style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 22, padding: 24, backdropFilter: 'blur(6px)' }}>
+        <div className="cardAnim" style={{ background: '#ffffff', border: `1px solid ${C.border}`, borderRadius: 22, padding: 24, boxShadow: '0 8px 32px rgba(15,23,32,0.08)' }}>
           <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 4 }}>Welcome Back</div>
           <div style={{ fontSize: 12, color: C.muted, marginBottom: 22 }}>Sign in to your investment account</div>
 
           <div className="staggerIn">
             <Field label="Username" value={un} onChange={setUn} placeholder="e.g. rahul.sharma" />
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10, color: '#9ca3af', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 6 }}>Password</div>
+              <div style={{ fontSize: 10, color: '#5b665f', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 6 }}>Password</div>
               <div style={{ position: 'relative' }}>
                 <input value={pw} onChange={e => setPw(e.target.value)} type={showPw ? 'text' : 'password'}
                   placeholder="Enter password"
                   onKeyDown={e => e.key === 'Enter' && login()}
-                  style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '10px 44px 10px 13px', color: C.text, fontSize: 14, outline: 'none', fontFamily: 'inherit' }} />
+                  style={{ width: '100%', background: 'rgba(15,23,32,0.06)', border: '1px solid rgba(15,23,32,0.12)', borderRadius: 10, padding: '10px 44px 10px 13px', color: C.text, fontSize: 14, outline: 'none', fontFamily: 'inherit' }} />
                 <button onClick={() => setShowPw(!showPw)}
                   style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 16 }}>
                   {showPw ? '🙈' : '👁'}
@@ -366,7 +367,8 @@ function LoginScreen() {
             {error && <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 10, padding: '10px 13px', color: C.red, fontSize: 12, marginBottom: 14 }}>⚠️ {error}</div>}
 
             <Btn label="Sign In" onClick={login} loading={loading} full />
- {/* Demo */}
+
+            {/* Demo */}
             <div style={{ marginTop: 18, background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 14 }}>
               <div style={{ fontSize: 11, color: C.gold, fontWeight: 800, marginBottom: 10 }}>Demo Credentials — tap to fill</div>
               {[['Admin', 'admin', 'admin@2025'], ['Client 1', 'rahul.sharma', 'client123'], ['Client 2', 'priya.patel', 'client456']].map(([r, u, p]) => (
@@ -446,7 +448,7 @@ function HomeScreen({ user }) {
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
 
       {/* Header */}
-      <div style={{ background: 'linear-gradient(160deg,#0c1525,#0f2744)', padding: '52px 20px 20px' }}>
+      <div style={{ background: 'linear-gradient(160deg,#eafaf3,#ffffff)', padding: '52px 20px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
           <div>
             <div style={{ fontSize: 12, color: C.muted }}>Good day,</div>
@@ -454,14 +456,14 @@ function HomeScreen({ user }) {
               {(user.name || 'Investor').split(' ')[0]} 👋
             </div>
           </div>
-          <div style={{ width: 44, height: 44, borderRadius: 13, background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#0a0f1e', fontSize: 18, boxShadow: `0 4px 20px ${C.gold}40` }}>
+          <div style={{ width: 44, height: 44, borderRadius: 13, background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#ffffff', fontSize: 18, boxShadow: `0 4px 20px ${C.gold}40` }}>
             {(user.name || 'I')[0]}
           </div>
         </div>
         {/* Summary card */}
-        <div style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 18 }}>
+        <div style={{ background: '#ffffff', border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 18, boxShadow: '0 4px 20px rgba(15,23,32,0.06)' }}>
           <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1 }}>TOTAL PORTFOLIO VALUE</div>
-          <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 30, fontWeight: 800, color: '#e8d5a3', margin: '6px 0 14px' }}>{fmt(totC)}</div>
+          <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 30, fontWeight: 800, color: '#0a7a52', margin: '6px 0 14px' }}>{fmt(totC)}</div>
           <div style={{ height: 1, background: C.border, marginBottom: 14 }} />
           <div style={{ display: 'flex', gap: 20 }}>
             {[['INVESTED', fmt(totI), C.text2], ['GAIN', (totG >= 0 ? '+' : '') + fmt(totG), gc(totG)], ['RETURN', pct(totGP), gc(totGP)]].map(([l, v, c]) => (
@@ -487,7 +489,7 @@ function HomeScreen({ user }) {
             const gp   = buy > 0 ? (g / buy) * 100 : 0
             return (
               <Card key={i} style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 11, background: '#0f2744', border: '1px solid #2563eb33', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🏛️</div>
+                <div style={{ width: 42, height: 42, borderRadius: 11, background: '#eafaf3', border: '1px solid #00b38640', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🏛️</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.companyName}</div>
                   <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{h.stake}% stake · {h.sector}</div>
@@ -507,7 +509,7 @@ function HomeScreen({ user }) {
           ? <Empty icon="📭" title="No opportunities right now" sub="Check back soon" />
           : <div style={{ display: 'flex', gap: 12, overflowX: 'auto', marginLeft: -18, paddingLeft: 18, paddingRight: 18, paddingBottom: 8 }}>
             {companies.map(co => (
-              <div key={co.id} style={{ minWidth: 210, background: '#0f2031', border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 16, flexShrink: 0 }}>
+              <div key={co.id} style={{ minWidth: 210, background: '#e6f7f0', border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 16, flexShrink: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6, gap: 6 }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: C.text, lineHeight: 1.3, flex: 1 }}>{co.name}</div>
                   <Badge label={co.risk} color={riskC[co.risk] || C.muted} />
@@ -520,7 +522,7 @@ function HomeScreen({ user }) {
                   </div>
                 ))}
                 <button onClick={() => { setInvesting(co); setDone(false) }}
-                  style={{ width: '100%', marginTop: 12, background: `linear-gradient(90deg,${C.gold},${C.goldL})`, border: 'none', borderRadius: 10, padding: 10, color: '#0a0f1e', fontWeight: 900, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  style={{ width: '100%', marginTop: 12, background: `linear-gradient(90deg,${C.gold},${C.goldL})`, border: 'none', borderRadius: 10, padding: 10, color: '#ffffff', fontWeight: 900, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
                   Invest Now →
                 </button>
               </div>
@@ -532,7 +534,7 @@ function HomeScreen({ user }) {
       <Sheet show={!!investing} onClose={() => { setInvesting(null); setDone(false) }} title={done ? '' : 'Express Interest'}>
         {investing && !done && (
           <>
-            <Card style={{ marginBottom: 16, background: 'rgba(255,255,255,0.05)' }}>
+            <Card style={{ marginBottom: 16, background: 'rgba(15,23,32,0.05)' }}>
               <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 10 }}>{investing.name}</div>
               {[['Sector', investing.sector], ['Min Investment', fmt(investing.minInvest)], ['Valuation', fmtL(investing.currentValuation)], ['Expected Returns', investing.expectedReturns], ['Risk', investing.risk]].map(([l, v]) => (
                 <div key={l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
@@ -651,16 +653,16 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
             {['Sell Details', 'Bank Details', 'Review'].map((s, i) => (
               <div key={s} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
                 <div style={{ width: 26, height: 26, borderRadius: '50%',
-                  background: prog > i+1 ? C.green : prog === i+1 ? C.gold : 'rgba(255,255,255,0.07)',
+                  background: prog > i+1 ? C.green : prog === i+1 ? C.gold : 'rgba(15,23,32,0.07)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, fontWeight: 900, color: prog > i+1 ? '#060d18' : prog === i+1 ? '#060d18' : C.muted }}>
+                  fontSize: 10, fontWeight: 900, color: prog > i+1 ? '#ffffff' : prog === i+1 ? '#ffffff' : C.muted }}>
                   {prog > i+1 ? '✓' : i+1}
                 </div>
                 <div style={{ fontSize: 8, color: prog === i+1 ? C.gold : C.muted, fontWeight: 700, textAlign: 'center' }}>{s}</div>
               </div>
             ))}
           </div>
-          <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+          <div style={{ height: 3, background: 'rgba(15,23,32,0.06)', borderRadius: 99, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${((prog-1)/2)*100}%`, background: `linear-gradient(90deg,${C.gold},${C.goldL})`, borderRadius: 99, transition: 'width .4s' }} />
           </div>
         </div>
@@ -669,12 +671,12 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
       {/* STEP 1 — Sell Details */}
       {step === 'amount' && (
         <div>
-          <div style={{ background: 'linear-gradient(135deg,#0f2744,#0a1e38)', border: `1px solid ${C.goldBd}`, borderRadius: 14, padding: 16, marginBottom: 18 }}>
+          <div style={{ background: 'linear-gradient(135deg,#eafaf3,#ffffff)', border: `1px solid ${C.goldBd}`, borderRadius: 14, padding: 16, marginBottom: 18 }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 4 }}>{holding.companyName}</div>
             <div style={{ fontSize: 11, color: C.muted, marginBottom: 12 }}>{holding.sector} · {holding.stake}% total stake</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
               {[['Invested', fmt(invested), C.text2], ['Current', fmt(currVal), C.gold], ['P&L', (currVal-invested >= 0 ? '+' : '')+fmt(currVal-invested), gc(currVal-invested)]].map(([l,v,c]) => (
-                <div key={l} style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 9, padding: '8px 10px' }}>
+                <div key={l} style={{ background: 'rgba(15,23,32,0.035)', borderRadius: 9, padding: '8px 10px' }}>
                   <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase', marginBottom: 3 }}>{l}</div>
                   <div style={{ fontSize: 12, fontWeight: 800, color: c }}>{v}</div>
                 </div>
@@ -689,7 +691,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
                 const partialVal = ((holding.stake * p / 100) / 100) * (parseInt(askVal) || nowVal)
                 return (
                   <button key={p} onClick={() => setSellPct(p)}
-                    style={{ background: sellPct === p ? `linear-gradient(135deg,${C.red},${C.red}cc)` : 'rgba(255,255,255,0.06)',
+                    style={{ background: sellPct === p ? `linear-gradient(135deg,${C.red},${C.red}cc)` : 'rgba(15,23,32,0.06)',
                       border: `1.5px solid ${sellPct === p ? 'transparent' : C.border}`,
                       borderRadius: 10, padding: '12px 4px', cursor: 'pointer', fontFamily: 'inherit',
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
@@ -699,7 +701,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
                 )
               })}
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', marginTop: 10, textAlign: 'center', fontSize: 12, color: C.muted }}>
+            <div style={{ background: 'rgba(15,23,32,0.04)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', marginTop: 10, textAlign: 'center', fontSize: 12, color: C.muted }}>
               Selling <strong style={{ color: C.gold }}>{sellPct}%</strong> of your stake
               {' · '}Est. payout <strong style={{ color: C.green }}>{fmt(((holding.stake * sellPct / 100) / 100) * (parseInt(askVal) || nowVal))}</strong>
             </div>
@@ -716,7 +718,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
                 <span style={{ fontSize: 11, fontWeight: 700, color: c }}>{v}</span>
               </div>
             ))}
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '10px 0' }} />
+            <div style={{ height: 1, background: 'rgba(15,23,32,0.07)', margin: '10px 0' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 12, fontWeight: 800, color: C.text }}>{gainLoss >= 0 ? '🎉 Est. Profit' : '⚠ Est. Loss'}</span>
               <span style={{ fontSize: 16, fontWeight: 900, color: gc(gainLoss) }}>{gainLoss >= 0 ? '+' : ''}{fmt(gainLoss)} ({gainLoss >= 0 ? '+' : ''}{gainPct.toFixed(1)}%)</span>
@@ -739,26 +741,26 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
             🔒 Bank details are used only for payout. Account number is masked in our records.
           </div>
 
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
+          <div style={{ background: 'rgba(15,23,32,0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 12 }}>👤 Account Holder</div>
             <Field label="Full Name (as per bank) *" value={bank.accountName}
               onChange={v => { setBank(b => ({...b, accountName:v})); setErrors(e => ({...e, accountName:null})) }}
               placeholder="Rahul Sharma" note={errors.accountName ? `⚠ ${errors.accountName}` : 'Must match bank account name exactly'} />
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10, color: '#9ca3af', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Account Type *</div>
+              <div style={{ fontSize: 10, color: '#5b665f', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Account Type *</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {['savings', 'current'].map(t => (
                   <button key={t} onClick={() => setBank(b => ({...b, accountType:t}))}
-                    style={{ flex: 1, background: bank.accountType === t ? `linear-gradient(135deg,${C.gold},${C.goldL})` : 'rgba(255,255,255,0.05)',
+                    style={{ flex: 1, background: bank.accountType === t ? `linear-gradient(135deg,${C.gold},${C.goldL})` : 'rgba(15,23,32,0.05)',
                       border: `1.5px solid ${bank.accountType === t ? 'transparent' : C.border}`,
-                      borderRadius: 9, padding: 9, color: bank.accountType === t ? '#060d18' : C.muted,
+                      borderRadius: 9, padding: 9, color: bank.accountType === t ? '#ffffff' : C.muted,
                       fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize' }}>{t}</button>
                 ))}
               </div>
             </div>
           </div>
 
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
+          <div style={{ background: 'rgba(15,23,32,0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 12 }}>🏦 Bank Account</div>
             <Field label="Bank Name *" value={bank.bankName}
               onChange={v => { setBank(b => ({...b, bankName:v})); setErrors(e => ({...e, bankName:null})) }}
@@ -815,7 +817,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
             ))}
           </div>
 
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 10, color: C.muted, lineHeight: 1.8 }}>
+          <div style={{ background: 'rgba(15,23,32,0.02)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 10, color: C.muted, lineHeight: 1.8 }}>
             By submitting I confirm: bank details are correct, payout subject to buyer availability (7–30 days), TDS as applicable will be deducted.
           </div>
 
@@ -839,7 +841,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
             <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, marginBottom: 10 }}>📋 What happens next?</div>
             {[['Admin Reviews', 'Your request is listed in the investor network.'], ['Buyer Matched', 'Typically 7–30 business days.'], ['Payment Cleared', 'Buyer payment received & verified.'], ['Payout to You', 'Transferred to your bank via NEFT/IMPS.']].map(([t,d], i) => (
               <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
-                <div style={{ width: 20, height: 20, borderRadius: '50%', background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: '#060d18', flexShrink: 0 }}>{i+1}</div>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: '#ffffff', flexShrink: 0 }}>{i+1}</div>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, color: C.text }}>{t}</div>
                   <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{d}</div>
@@ -916,7 +918,7 @@ function BuyMoreFlow({ holding, nowVal, adminPhone, user, onClose }) {
   return (
     <div>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
-      <div style={{ background: 'linear-gradient(135deg,#0f2744,#0a1e38)', border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 14, marginBottom: 18 }}>
+      <div style={{ background: 'linear-gradient(135deg,#eafaf3,#ffffff)', border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 14, marginBottom: 18 }}>
         <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 3 }}>{holding.companyName}</div>
         <div style={{ fontSize: 11, color: C.muted }}>Current stake: {holding.stake}% · Valuation: {fmtL(nowVal)}</div>
       </div>
@@ -928,7 +930,7 @@ function BuyMoreFlow({ holding, nowVal, adminPhone, user, onClose }) {
             const partialCost = ((holding.stake * p / 100) / 100) * nowVal
             return (
               <button key={p} onClick={() => setAddPct(p)}
-                style={{ background: addPct === p ? `linear-gradient(135deg,${C.green},${C.green}cc)` : 'rgba(255,255,255,0.06)',
+                style={{ background: addPct === p ? `linear-gradient(135deg,${C.green},${C.green}cc)` : 'rgba(15,23,32,0.06)',
                   border: `1.5px solid ${addPct === p ? 'transparent' : C.border}`,
                   borderRadius: 10, padding: '12px 4px', cursor: 'pointer', fontFamily: 'inherit',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
@@ -1047,7 +1049,7 @@ function PortfolioScreen({ user }) {
                       <span style={{ fontSize: 12, color: C.text2, fontWeight: 600 }}>{sec}</span>
                       <span style={{ fontSize: 12, color: C.gold, fontWeight: 700 }}>{p.toFixed(1)}% · {fmt(val)}</span>
                     </div>
-                    <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: 5, background: 'rgba(15,23,32,0.06)', borderRadius: 99, overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${p}%`, background: C.gold, borderRadius: 99 }} />
                     </div>
                   </div>
@@ -1068,9 +1070,9 @@ function PortfolioScreen({ user }) {
             <div key={i} style={{ marginBottom: 14 }}>
               {/* Card */}
               <div onClick={() => setSelected(isOpen ? null : i)}
-                style={{ background: isOpen ? 'rgba(201,162,39,0.06)' : C.card, border: `1px solid ${isOpen ? C.goldBd : C.border}`, borderRadius: isOpen ? '16px 16px 0 0' : 16, padding: 16, cursor: 'pointer' }}>
+                style={{ background: isOpen ? 'rgba(0,179,134,0.06)' : C.card, border: `1px solid ${isOpen ? C.goldBd : C.border}`, borderRadius: isOpen ? '16px 16px 0 0' : 16, padding: 16, cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 13, background: '#0f2744', border: '1px solid #2563eb33', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🏛️</div>
+                  <div style={{ width: 46, height: 46, borderRadius: 13, background: '#eafaf3', border: '1px solid #00b38640', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🏛️</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>{h.companyName}</div>
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{h.sector}</div>
@@ -1081,7 +1083,7 @@ function PortfolioScreen({ user }) {
                 </div>
 
                 {/* Sparkline */}
-                <div style={{ marginBottom: 12, background: 'rgba(0,0,0,0.18)', borderRadius: 10, padding: '6px 8px' }}>
+                <div style={{ marginBottom: 12, background: 'rgba(15,23,32,0.03)', borderRadius: 10, padding: '6px 8px' }}>
                   <Sparkline data={h.history} color={gc(h.g)} height={40} id={`h${i}`} />
                 </div>
 
@@ -1127,7 +1129,7 @@ function PortfolioScreen({ user }) {
 
               {/* Action panel */}
               {isOpen && (
-                <div style={{ background: 'rgba(10,18,34,0.97)', border: `1px solid ${C.goldBd}`, borderTop: 'none', borderRadius: '0 0 16px 16px', padding: 16 }}>
+                <div style={{ background: '#f8fbfa', border: `1px solid ${C.goldBd}`, borderTop: 'none', borderRadius: '0 0 16px 16px', padding: 16 }}>
                   <div style={{ fontSize: 11, color: C.muted, marginBottom: 12, textAlign: 'center' }}>
                     What would you like to do with <strong style={{ color: C.text }}>{h.companyName}</strong>?
                   </div>
@@ -1197,12 +1199,12 @@ function NewsScreen() {
       <div style={{ display: 'flex', gap: 8, padding: '12px 18px', overflowX: 'auto', flexShrink: 0, borderBottom: `1px solid ${C.border}` }}>
         {filters.map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            style={{ flexShrink: 0, background: filter === f ? `linear-gradient(90deg,${C.gold},${C.goldL})` : 'rgba(255,255,255,0.05)', border: filter === f ? 'none' : `1px solid ${C.border}`, borderRadius: 20, padding: '6px 14px', fontSize: 11, fontWeight: 700, color: filter === f ? '#0a0f1e' : C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>{f}</button>
+            style={{ flexShrink: 0, background: filter === f ? `linear-gradient(90deg,${C.gold},${C.goldL})` : 'rgba(15,23,32,0.05)', border: filter === f ? 'none' : `1px solid ${C.border}`, borderRadius: 20, padding: '6px 14px', fontSize: 11, fontWeight: 700, color: filter === f ? '#ffffff' : C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>{f}</button>
         ))}
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
         {list.map((n, i) => (
-          <Card key={n.id} style={{ marginBottom: 12, background: i === 0 ? '#0f2031' : C.card }}>
+          <Card key={n.id} style={{ marginBottom: 12, background: i === 0 ? '#e6f7f0' : C.card }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <Badge label={n.tag} color={n.color} />
@@ -1251,7 +1253,7 @@ function ProfileScreen({ user }) {
       <div style={{ padding: '22px 18px 40px' }}>
         {/* Avatar */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ width: 80, height: 80, borderRadius: '50%', background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: 32, fontWeight: 900, color: '#0a0f1e', boxShadow: `0 8px 32px ${C.gold}35` }}>
+          <div style={{ width: 80, height: 80, borderRadius: '50%', background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: 32, fontWeight: 900, color: '#ffffff', boxShadow: `0 8px 32px ${C.gold}35` }}>
             {(user.name || 'I')[0]}
           </div>
           <div style={{ fontSize: 20, fontWeight: 900, color: C.text }}>{user.name || 'Investor'}</div>
@@ -1261,7 +1263,7 @@ function ProfileScreen({ user }) {
 
         {/* Welcome note */}
         {user.welcomeNote && (
-          <Card style={{ marginBottom: 14, background: '#0f2031', border: `1px solid ${C.goldBd}` }}>
+          <Card style={{ marginBottom: 14, background: '#e6f7f0', border: `1px solid ${C.goldBd}` }}>
             <div style={{ fontSize: 10, color: C.gold, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>✉ Note from Anand Finco</div>
             <div style={{ fontSize: 13, color: C.text2, lineHeight: 1.7, fontStyle: 'italic' }}>"{user.welcomeNote}"</div>
           </Card>
@@ -1417,7 +1419,7 @@ function AdminCompanies() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 7, marginLeft: 8 }}>
-                <button onClick={() => startEdit(co)} style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '6px 9px', cursor: 'pointer', fontSize: 13 }}>✏️</button>
+                <button onClick={() => startEdit(co)} style={{ background: 'rgba(15,23,32,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '6px 9px', cursor: 'pointer', fontSize: 13 }}>✏️</button>
                 <button onClick={() => setConfirm({ id: co.id, msg: `Delete "${co.name}"? This is permanent.` })} style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 8, padding: '6px 9px', cursor: 'pointer', fontSize: 13 }}>🗑️</button>
               </div>
             </div>
@@ -1435,7 +1437,7 @@ function AdminCompanies() {
               <div style={{ display: 'flex', gap: 8 }}>
                 <input value={valMap[co.id] || ''} onChange={e => setValMap(p => ({ ...p, [co.id]: e.target.value }))}
                   placeholder={`New value (now: ${fmtL(co.currentValuation)})`} type="number"
-                  style={{ flex: 1, background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 10px', color: C.text, fontSize: 12, outline: 'none', fontFamily: 'inherit' }} />
+                  style={{ flex: 1, background: 'rgba(15,23,32,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 10px', color: C.text, fontSize: 12, outline: 'none', fontFamily: 'inherit' }} />
                 <Btn label="Update" onClick={() => updateVal(co)} sm />
               </div>
             </div>
@@ -1511,14 +1513,14 @@ function AdminNotifications() {
             {unread > 0 ? `${unread} new unread` : 'All caught up ✓'}
           </div>
         </div>
-        <button onClick={load} style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>🔄 Refresh</button>
+        <button onClick={load} style={{ background: 'rgba(15,23,32,0.05)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>🔄 Refresh</button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
         {loading && <Loader />}
         {!loading && notifs.length === 0 && <Empty icon="🔔" title="No requests yet" sub="When clients tap 'Invest Now', their requests appear here" />}
         {notifs.map(n => (
           <div key={n.id} onClick={() => markRead(n)}
-            style={{ background: n.read ? C.card : 'rgba(201,162,39,0.07)', border: `1px solid ${n.read ? C.border : C.goldBd}`, borderRadius: 16, padding: 16, marginBottom: 12, cursor: 'pointer' }}>
+            style={{ background: n.read ? C.card : 'rgba(0,179,134,0.07)', border: `1px solid ${n.read ? C.border : C.goldBd}`, borderRadius: 16, padding: 16, marginBottom: 12, cursor: 'pointer' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 {!n.read && <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.gold, flexShrink: 0 }} />}
@@ -1606,7 +1608,7 @@ function AdminPortfolios() {
         {clients.length === 0 && <Empty icon="📋" title="No clients yet" sub="Add clients first from the Clients tab" />}
         {clients.map(c => (
           <Card key={c.id} style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => selectClient(c)}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#0a0f1e', fontSize: 18, flexShrink: 0 }}>{(c.name || '?')[0]}</div>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#ffffff', fontSize: 18, flexShrink: 0 }}>{(c.name || '?')[0]}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{c.name}</div>
               <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{c.username || c.id}</div>
@@ -1623,7 +1625,7 @@ function AdminPortfolios() {
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
       <Confirm msg={confirm?.msg} onYes={removeHolding} onNo={() => setConfirm(null)} />
       <div style={{ background: C.bg2, padding: '52px 18px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-        <button onClick={() => setSelected(null)} style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+        <button onClick={() => setSelected(null)} style={{ background: 'rgba(15,23,32,0.06)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>{selected.name}</div>
           <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{holdings.length} holdings</div>
@@ -1658,11 +1660,11 @@ function AdminPortfolios() {
       </div>
       <Sheet show={sheet} onClose={() => setSheet(false)} title={`Add Holding — ${selected.name}`}>
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 10, color: '#9ca3af', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Select Company *</div>
+          <div style={{ fontSize: 10, color: '#5b665f', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Select Company *</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {companies.map(c => (
               <button key={c.id} onClick={() => { sf('companyId')(c.id); sf('buyValuation')(String(c.currentValuation)) }}
-                style={{ background: form.companyId === c.id ? C.gold : 'rgba(255,255,255,0.05)', border: `1px solid ${form.companyId === c.id ? C.gold : C.border}`, borderRadius: 20, padding: '6px 13px', fontSize: 11, fontWeight: 700, color: form.companyId === c.id ? '#0a0f1e' : C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>{c.name}</button>
+                style={{ background: form.companyId === c.id ? C.gold : 'rgba(15,23,32,0.05)', border: `1px solid ${form.companyId === c.id ? C.gold : C.border}`, borderRadius: 20, padding: '6px 13px', fontSize: 11, fontWeight: 700, color: form.companyId === c.id ? '#ffffff' : C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>{c.name}</button>
             ))}
           </div>
         </div>
@@ -1730,7 +1732,7 @@ function AdminSellRequests() {
           <div style={{ fontSize: 22, fontWeight: 900, color: C.text }}>Sell Requests</div>
           <div style={{ fontSize: 11, color: unread > 0 ? C.red : C.muted, marginTop: 2 }}>{unread > 0 ? `${unread} new pending` : 'All reviewed ✓'}</div>
         </div>
-        <button onClick={load} style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>🔄 Refresh</button>
+        <button onClick={load} style={{ background: 'rgba(15,23,32,0.05)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>🔄 Refresh</button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
         {reqs.length === 0 && <Empty icon="📤" title="No sell requests" sub="When clients submit sell requests, they appear here." />}
@@ -1746,7 +1748,7 @@ function AdminSellRequests() {
                 </div>
                 <Badge label="SELL REQUEST" color={C.red} />
               </div>
-              <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
+              <div style={{ background: 'rgba(15,23,32,0.035)', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {[['Company', r.companyName || '—'], ['Selling', `${r.sellPercent}% of stake`], ['Asking Val.', fmtL(r.askingValuation)], ['Exp. Payout', fmt(r.expectedPayout)], ['P&L', `${r.gainLoss >= 0 ? '+' : ''}${fmt(r.gainLoss)}`], ['Date', r.timestamp?.toDate?.()?.toLocaleDateString('en-IN') || '—']].map(([l, v]) => (
                     <div key={l}>
@@ -1864,7 +1866,7 @@ function AdminClients() {
         {clients.map(c => (
           <Card key={c.id} style={{ marginBottom: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 46, height: 46, borderRadius: 13, background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#0a0f1e', fontSize: 19, flexShrink: 0 }}>{(c.name || '?')[0]}</div>
+              <div style={{ width: 46, height: 46, borderRadius: 13, background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#ffffff', fontSize: 19, flexShrink: 0 }}>{(c.name || '?')[0]}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{c.name}</div>
                 <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{c.username || c.id} · {c.phone || 'No phone'} · {c.city || '—'}</div>
@@ -1874,7 +1876,7 @@ function AdminClients() {
                 <button onClick={() => openWA(c)} style={{ background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.3)', borderRadius: 10, padding: '8px 11px', fontSize: 18, cursor: 'pointer', flexShrink: 0 }}>💬</button>
               )}
             </div>
-            {c.welcomeNote && <div style={{ fontSize: 11, color: C.muted, marginTop: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, fontStyle: 'italic' }}>"{c.welcomeNote}"</div>}
+            {c.welcomeNote && <div style={{ fontSize: 11, color: C.muted, marginTop: 10, padding: '8px 12px', background: 'rgba(15,23,32,0.03)', borderRadius: 8, fontStyle: 'italic' }}>"{c.welcomeNote}"</div>}
           </Card>
         ))}
       </div>
@@ -1928,7 +1930,7 @@ function AdminSettings({ user }) {
       <div style={{ flex: 1, overflowY: 'auto', padding: '18px 18px 50px' }}>
         {/* Admin Info */}
         <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 16, padding: 16, display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 13, background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 900, color: '#0a0f1e' }}>A</div>
+          <div style={{ width: 48, height: 48, borderRadius: 13, background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 900, color: '#ffffff' }}>A</div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>Admin — Anand Finco</div>
             <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>{user?.email}</div>
@@ -1949,8 +1951,8 @@ function AdminSettings({ user }) {
         <Card style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 10 }}>🔐 Firestore Security Rules</div>
           <div style={{ fontSize: 12, color: C.muted, marginBottom: 12 }}>Copy-paste in Firebase Console → Firestore → Rules tab:</div>
-          <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: 10, padding: 14, border: `1px solid rgba(255,255,255,0.06)` }}>
-            <pre style={{ fontSize: 9, color: '#a5f3fc', lineHeight: 1.7, whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{`rules_version = '2';
+          <div style={{ background: 'rgba(15,23,32,0.04)', borderRadius: 10, padding: 14, border: `1px solid rgba(15,23,32,0.06)` }}>
+            <pre style={{ fontSize: 9, color: '#0a6b4a', lineHeight: 1.7, whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{`rules_version = '2';
 service cloud.firestore {
   match /databases/{db}/documents {
     match /companies/{id} {
