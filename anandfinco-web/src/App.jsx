@@ -79,6 +79,52 @@ function Shell({ children }) {
   )
 }
 
+// ── Icon system (line-style SVG icons, no emoji, no dependency) ────────────────
+const ICONS = {
+  home:        <><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V10"/></>,
+  portfolio:   <><line x1="5" y1="20" x2="5" y2="12"/><line x1="12" y1="20" x2="12" y2="5"/><line x1="19" y1="20" x2="19" y2="15"/></>,
+  news:        <><path d="M6 3h9a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M17 8h1a2 2 0 0 1 2 2v9a1.5 1.5 0 0 1-3 0"/><line x1="7" y1="7" x2="14" y2="7"/><line x1="7" y1="11" x2="14" y2="11"/><line x1="7" y1="15" x2="11" y2="15"/></>,
+  user:        <><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/><circle cx="12" cy="7" r="4"/></>,
+  users:       <><path d="M2 20v-1a4 4 0 0 1 4-4h3a4 4 0 0 1 4 4v1"/><circle cx="7.5" cy="8" r="3"/><path d="M15 20v-1a4 4 0 0 0-2.3-3.6"/><path d="M13 4.2a3 3 0 0 1 0 5.7"/></>,
+  building:    <><rect x="4" y="3" width="16" height="18" rx="1.5"/><line x1="8" y1="7.5" x2="8.01" y2="7.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/><line x1="16" y1="7.5" x2="16.01" y2="7.5"/><line x1="8" y1="11.5" x2="8.01" y2="11.5"/><line x1="12" y1="11.5" x2="12.01" y2="11.5"/><line x1="16" y1="11.5" x2="16.01" y2="11.5"/><path d="M9.5 21v-4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v4"/></>,
+  bank:        <><path d="M3 10 12 4l9 6"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="5.5" y1="10" x2="5.5" y2="18"/><line x1="9.5" y1="10" x2="9.5" y2="18"/><line x1="14.5" y1="10" x2="14.5" y2="18"/><line x1="18.5" y1="10" x2="18.5" y2="18"/><line x1="3" y1="20.5" x2="21" y2="20.5"/></>,
+  bell:        <><path d="M6.5 8.5a5.5 5.5 0 0 1 11 0c0 5.5 2 7 2 7h-15s2-1.5 2-7Z"/><path d="M10.3 19a1.7 1.7 0 0 0 3.4 0"/></>,
+  banknote:    <><rect x="2.5" y="6.5" width="19" height="11" rx="1.5"/><circle cx="12" cy="12" r="2.3"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/></>,
+  trendUp:     <><polyline points="3.5 17 10 10.5 14 14.5 20.5 8"/><polyline points="15 8 20.5 8 20.5 13.5"/></>,
+  trendDown:   <><polyline points="3.5 7 10 13.5 14 9.5 20.5 16"/><polyline points="15 16 20.5 16 20.5 10.5"/></>,
+  settings:    <><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V20a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H4a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1A2 2 0 1 1 8.2 3.5l.1.1a1.7 1.7 0 0 0 1.9.3H10.4a1.7 1.7 0 0 0 1-1.6V4a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.3 1.9V10.4a1.7 1.7 0 0 0 1.6 1H20a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1Z"/></>,
+  checkCircle: <><circle cx="12" cy="12" r="9"/><polyline points="8 12.5 11 15.5 16 9"/></>,
+  xCircle:     <><circle cx="12" cy="12" r="9"/><line x1="14.5" y1="9.5" x2="9.5" y2="14.5"/><line x1="9.5" y1="9.5" x2="14.5" y2="14.5"/></>,
+  lock:        <><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M7.5 10.5V7a4.5 4.5 0 0 1 9 0v3.5"/></>,
+  chat:        <path d="M20.5 11a8 8 0 0 1-8.5 8 8.2 8.2 0 0 1-3.6-.8L3.5 20l1.8-4.6A8 8 0 1 1 20.5 11Z"/>,
+  inbox:       <><polyline points="21 12.5 15.5 12.5 13.7 15 10.3 15 8.5 12.5 3 12.5"/><path d="M6 6 3 12.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5.5L18 6a2 2 0 0 0-1.8-1.1H7.8A2 2 0 0 0 6 6Z"/></>,
+  refresh:     <><polyline points="22 4.5 22 9.5 17 9.5"/><polyline points="2 15.5 2 20.5 7 20.5"/><path d="M3.6 9.5a8.5 8.5 0 0 1 14-3.2L22 9.5M2 15.5l4.4 3.2a8.5 8.5 0 0 0 14-3.2"/></>,
+  shield:      <><path d="M12 21s7.5-3.5 7.5-9V6L12 3 4.5 6v6c0 5.5 7.5 9 7.5 9Z"/><polyline points="9 12 11 14 15 9.5"/></>,
+  logout:      <><path d="M9.5 20h-4a1.5 1.5 0 0 1-1.5-1.5v-13A1.5 1.5 0 0 1 5.5 4h4"/><polyline points="15.5 16 20 11.5 15.5 7"/><line x1="20" y1="11.5" x2="9.5" y2="11.5"/></>,
+  eye:         <><path d="M1.5 12s4-7.5 10.5-7.5S22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></>,
+  eyeOff:      <><path d="M17 17.2A10.6 10.6 0 0 1 12 18.5c-6.5 0-10.5-6.5-10.5-6.5A18 18 0 0 1 6.2 6.8M9.7 5a9 9 0 0 1 2.3-.3c6.5 0 10.5 6.8 10.5 6.8a17.7 17.7 0 0 1-2 2.9M14.1 14.1a3 3 0 1 1-4.2-4.2"/><line x1="2" y1="2" x2="22" y2="22"/></>,
+  award:       <><circle cx="12" cy="8.5" r="6.5"/><polyline points="8 14.5 6.8 21.5 12 19 17.2 21.5 16 14.5"/></>,
+  clipboard:   <><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></>,
+  mail:        <><rect x="2.5" y="5" width="19" height="14" rx="2"/><polyline points="2.5 6.5 12 13.5 21.5 6.5"/></>,
+  wallet:      <><path d="M2.5 8a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/><path d="M17 12h3v3.5h-3a1.75 1.75 0 0 1 0-3.5Z"/><path d="M5 6 15.5 3l1.5 3"/></>,
+  bulb:        <><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6.5 6.5 0 0 0-3.5 12c.6.4 1 1.1 1 1.9v.1h5v-.1c0-.8.4-1.5 1-1.9A6.5 6.5 0 0 0 12 3Z"/></>,
+  edit:        <><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="M13.5 6.5l4 4"/></>,
+  trash:       <><polyline points="3.5 6.5 6 6.5 20.5 6.5"/><path d="M17.5 6.5V19a1.5 1.5 0 0 1-1.5 1.5H8A1.5 1.5 0 0 1 6.5 19V6.5m2.5 0V4a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4v2.5"/></>,
+  phone:       <path d="M21 16.5v2.5a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 1.1 3.2 2 2 0 0 1 3.1 1h2.5a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L6.6 8.6a16 16 0 0 0 6 6l1.1-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.5 2Z"/>,
+  mapPin:      <><path d="M19.5 10.2c0 6-7.5 11.3-7.5 11.3s-7.5-5.3-7.5-11.3a7.5 7.5 0 0 1 15 0Z"/><circle cx="12" cy="10" r="2.6"/></>,
+  calendar:    <><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><line x1="15.5" y1="2.5" x2="15.5" y2="6.5"/><line x1="8.5" y1="2.5" x2="8.5" y2="6.5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/></>,
+}
+function Icon({ name, size = 18, color = 'currentColor', sw = 2, style }) {
+  const p = ICONS[name]
+  if (!p) return null
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
+      strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, display: 'block', ...style }}>
+      {p}
+    </svg>
+  )
+}
+
 // ── Tiny UI atoms ─────────────────────────────────────────────────────────────
 function Btn({ label, onClick, color, outline, danger, full, sm, disabled, loading, icon }) {
   const bg  = outline ? 'transparent' : (danger ? C.red : (color || C.gold))
@@ -189,7 +235,9 @@ function Confirm({ msg, onYes, onNo }) {
 function Empty({ icon, title, sub }) {
   return (
     <div style={{ textAlign: 'center', padding: '48px 20px' }}>
-      <div style={{ fontSize: 44, marginBottom: 12 }}>{icon}</div>
+      <div style={{ width: 64, height: 64, borderRadius: '50%', background: C.goldBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+        <Icon name={icon} size={28} color={C.gold} sw={1.6} />
+      </div>
       <div style={{ fontSize: 14, fontWeight: 700, color: C.muted, marginBottom: 6 }}>{title}</div>
       {sub && <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.6 }}>{sub}</div>}
     </div>
@@ -288,7 +336,7 @@ function BottomNav({ tabs, active, onChange }) {
           <button key={t.id} onClick={() => onChange(t.id)}
             style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, position: 'relative', fontFamily: 'inherit' }}>
             {t.badge > 0 && <div style={{ position: 'absolute', top: 8, right: '25%', width: 16, height: 16, background: C.red, borderRadius: '50%', fontSize: 9, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{t.badge}</div>}
-            <span style={{ fontSize: on ? 20 : 18, filter: on ? 'none' : 'grayscale(1) opacity(0.4)', transition: 'filter .2s' }}>{t.icon}</span>
+            <Icon name={t.icon} size={on ? 22 : 20} color={on ? C.gold : C.muted} sw={on ? 2.2 : 1.8} />
             <span style={{ fontSize: 9, fontWeight: on ? 800 : 500, color: on ? C.gold : C.muted, transition: 'color .2s' }}>{t.label}</span>
             {on && <div style={{ position: 'absolute', bottom: 0, width: 20, height: 2, background: C.gold, borderRadius: 2 }} />}
           </button>
@@ -357,7 +405,7 @@ function LoginScreen() {
                   style={{ width: '100%', background: 'rgba(15,23,32,0.06)', border: '1px solid rgba(15,23,32,0.12)', borderRadius: 10, padding: '10px 44px 10px 13px', color: C.text, fontSize: 14, outline: 'none', fontFamily: 'inherit' }} />
                 <button onClick={() => setShowPw(!showPw)}
                   style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 16 }}>
-                  {showPw ? '🙈' : '👁'}
+                  <Icon name={showPw ? 'eyeOff' : 'eye'} size={17} color={C.muted} />
                 </button>
               </div>
             </div>
@@ -367,7 +415,9 @@ function LoginScreen() {
             <Btn label="Sign In" onClick={login} loading={loading} full />
           </div>
         </div>
-        <div className="fadeUp" style={{ textAlign: 'center', fontSize: 10, color: C.dim, marginTop: 18, animationDelay: '.4s' }}>🔒 Secured by Firebase Auth · SEBI Compliant</div>
+        <div className="fadeUp" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, fontSize: 10, color: C.dim, marginTop: 18, animationDelay: '.4s' }}>
+          <Icon name="lock" size={11} color={C.dim} /> Secured by Firebase Auth · SEBI Compliant
+        </div>
       </div>
     </div>
   )
@@ -466,7 +516,7 @@ function HomeScreen({ user }) {
         {/* Active Holdings */}
         <div style={{ fontSize: 17, fontWeight: 800, color: C.text, marginBottom: 14 }}>Active Investments</div>
         {portfolio.length === 0
-          ? <Empty icon="🏦" title="No investments yet" sub="Your holdings will appear here" />
+          ? <Empty icon="bank" title="No investments yet" sub="Your holdings will appear here" />
           : portfolio.map((h, i) => {
             const co   = companies.find(c => c.id === h.companyId)
             const curr = (h.stake / 100) * (co?.currentValuation || h.buyValuation)
@@ -475,7 +525,7 @@ function HomeScreen({ user }) {
             const gp   = buy > 0 ? (g / buy) * 100 : 0
             return (
               <Card key={i} style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 11, background: '#eafaf3', border: '1px solid #00b38640', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🏛️</div>
+                <div style={{ width: 42, height: 42, borderRadius: 11, background: '#eafaf3', border: '1px solid #00b38640', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon name="building" size={20} color={C.gold} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.companyName}</div>
                   <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{h.stake}% stake · {h.sector}</div>
@@ -492,7 +542,7 @@ function HomeScreen({ user }) {
         <div style={{ fontSize: 17, fontWeight: 800, color: C.text, marginBottom: 4, marginTop: 26 }}>Opportunities</div>
         <div style={{ fontSize: 11, color: C.muted, marginBottom: 14 }}>Admin curated · Live pricing</div>
         {companies.length === 0
-          ? <Empty icon="📭" title="No opportunities right now" sub="Check back soon" />
+          ? <Empty icon="inbox" title="No opportunities right now" sub="Check back soon" />
           : <div style={{ display: 'flex', gap: 12, overflowX: 'auto', marginLeft: -18, paddingLeft: 18, paddingRight: 18, paddingBottom: 8 }}>
             {companies.map(co => (
               <div key={co.id} style={{ minWidth: 210, background: '#e6f7f0', border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 16, flexShrink: 0 }}>
@@ -529,8 +579,9 @@ function HomeScreen({ user }) {
                 </div>
               ))}
             </Card>
-            <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: '10px 13px', marginBottom: 16, fontSize: 12, color: C.gold, lineHeight: 1.6 }}>
-              📲 Our team will contact you on <b>{user.phone || 'your registered number'}</b> within 24 hours.
+            <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: '10px 13px', marginBottom: 16, fontSize: 12, color: C.gold, lineHeight: 1.6, display: 'flex', gap: 7, alignItems: 'flex-start' }}>
+              <Icon name="bell" size={13} color={C.gold} style={{ marginTop: 2 }} />
+              <span>Our team will contact you on <b>{user.phone || 'your registered number'}</b> within 24 hours.</span>
             </div>
             <div style={{ display: 'flex', gap: 10, width: '100%', boxSizing: 'border-box' }}>
               <Btn label="Cancel" onClick={() => setInvesting(null)} outline full />
@@ -540,7 +591,7 @@ function HomeScreen({ user }) {
         )}
         {done && (
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
-            <div style={{ fontSize: 52, marginBottom: 12 }}>✅</div>
+            <div style={{ width: 76, height: 76, borderRadius: '50%', background: C.greenBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}><Icon name="checkCircle" size={38} color={C.green} sw={1.7} /></div>
             <div style={{ fontSize: 20, fontWeight: 900, color: C.green, marginBottom: 8 }}>Request Sent!</div>
             <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.7, marginBottom: 24 }}>Your interest has been recorded.<br />WhatsApp opened to connect with our team.</div>
             <Btn label="Close" onClick={() => { setInvesting(null); setDone(false) }} full />
@@ -706,7 +757,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
             ))}
             <div style={{ height: 1, background: 'rgba(15,23,32,0.07)', margin: '10px 0' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 12, fontWeight: 800, color: C.text }}>{gainLoss >= 0 ? '🎉 Est. Profit' : '⚠ Est. Loss'}</span>
+              <span style={{ fontSize: 12, fontWeight: 800, color: C.text }}>{gainLoss >= 0 ? 'Estimated Profit' : 'Estimated Loss'}</span>
               <span style={{ fontSize: 16, fontWeight: 900, color: gc(gainLoss) }}>{gainLoss >= 0 ? '+' : ''}{fmt(gainLoss)} ({gainLoss >= 0 ? '+' : ''}{gainPct.toFixed(1)}%)</span>
             </div>
           </div>
@@ -723,12 +774,13 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
       {/* STEP 2 — Bank Details */}
       {step === 'bank' && (
         <div>
-          <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: '10px 13px', marginBottom: 18, fontSize: 11, color: C.gold, lineHeight: 1.7 }}>
-            🔒 Bank details are used only for payout. Account number is masked in our records.
+          <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: '10px 13px', marginBottom: 18, fontSize: 11, color: C.gold, lineHeight: 1.7, display: 'flex', gap: 7, alignItems: 'flex-start' }}>
+            <Icon name="lock" size={13} color={C.gold} style={{ marginTop: 2 }} />
+            <span>Bank details are used only for payout. Account number is masked in our records.</span>
           </div>
 
           <div style={{ background: 'rgba(15,23,32,0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 12 }}>👤 Account Holder</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 12 }}>Account Holder</div>
             <Field label="Full Name (as per bank) *" value={bank.accountName}
               onChange={v => { setBank(b => ({...b, accountName:v})); setErrors(e => ({...e, accountName:null})) }}
               placeholder="Rahul Sharma" note={errors.accountName ? `⚠ ${errors.accountName}` : 'Must match bank account name exactly'} />
@@ -747,7 +799,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
           </div>
 
           <div style={{ background: 'rgba(15,23,32,0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 12 }}>🏦 Bank Account</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="bank" size={14} /> Bank Account</div>
             <Field label="Bank Name *" value={bank.bankName}
               onChange={v => { setBank(b => ({...b, bankName:v})); setErrors(e => ({...e, bankName:null})) }}
               placeholder="State Bank of India" note={errors.bankName ? `⚠ ${errors.bankName}` : ''} />
@@ -764,8 +816,9 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
               placeholder="SBIN0001234" note={errors.ifsc ? `⚠ ${errors.ifsc}` : '11 characters · On your cheque/passbook'} />
           </div>
 
-          <div style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 10, padding: '10px 13px', marginBottom: 18, fontSize: 11, color: C.blue, lineHeight: 1.7 }}>
-            🔐 Account number is masked in storage. Admin initiates NEFT/IMPS after buyer payment clears.
+          <div style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 10, padding: '10px 13px', marginBottom: 18, fontSize: 11, color: C.blue, lineHeight: 1.7, display: 'flex', gap: 7, alignItems: 'flex-start' }}>
+            <Icon name="lock" size={13} color={C.blue} style={{ marginTop: 2 }} />
+            <span>Account number is masked in storage. Admin initiates NEFT/IMPS after buyer payment clears.</span>
           </div>
 
           {errors.submit && <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 8, padding: '8px 12px', color: C.red, fontSize: 11, marginBottom: 12 }}>⚠ {errors.submit}</div>}
@@ -784,7 +837,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
           </div>
 
           <div style={{ background: C.card, border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 14, marginBottom: 12 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, marginBottom: 10, textTransform: 'uppercase' }}>📊 Sell Summary</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, marginBottom: 10, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="portfolio" size={13} color={C.gold} /> Sell Summary</div>
             {[['Company', holding.companyName], ['Selling', `${sellPct}% of stake (${stakeToSell}%)`], ['Asking Valuation', fmtL(askValNum)], ['Expected Payout', fmt(sellValue)], ['Est. Profit/Loss', `${gainLoss >= 0 ? '+' : ''}${fmt(gainLoss)} (${gainLoss >= 0 ? '+' : ''}${gainPct.toFixed(1)}%)`]].map(([l,v], i) => (
               <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < 4 ? `1px solid ${C.border}` : 'none' }}>
                 <span style={{ fontSize: 11, color: C.muted }}>{l}</span>
@@ -794,7 +847,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
           </div>
 
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: C.text, marginBottom: 10, textTransform: 'uppercase' }}>🏦 Payout Bank Account</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: C.text, marginBottom: 10, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="bank" size={13} /> Payout Bank Account</div>
             {[['Account Name', bank.accountName], ['Bank', bank.bankName], ['Account No.', `●●●●${bank.accountNo.slice(-4)}`], ['IFSC', bank.ifsc.toUpperCase()], ['Type', bank.accountType.charAt(0).toUpperCase()+bank.accountType.slice(1)]].map(([l,v]) => (
               <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${C.border}` }}>
                 <span style={{ fontSize: 11, color: C.muted }}>{l}</span>
@@ -818,13 +871,13 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
       {/* STEP 4 — Done */}
       {step === 'done' && (
         <div style={{ textAlign: 'center', padding: '16px 0' }}>
-          <div style={{ fontSize: 52, marginBottom: 12 }}>✅</div>
+            <div style={{ width: 76, height: 76, borderRadius: '50%', background: C.greenBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}><Icon name="checkCircle" size={38} color={C.green} sw={1.7} /></div>
           <div style={{ fontSize: 20, fontWeight: 900, color: C.green, marginBottom: 8 }}>Request Submitted!</div>
           <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.8, marginBottom: 22 }}>
             Your sell request for <strong style={{ color: C.text }}>{holding.companyName}</strong> has been sent.<br />Admin has been notified on WhatsApp.
           </div>
           <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 16, marginBottom: 20, textAlign: 'left' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, marginBottom: 10 }}>📋 What happens next?</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="clipboard" size={13} color={C.gold} /> What happens next?</div>
             {[['Admin Reviews', 'Your request is listed in the investor network.'], ['Buyer Matched', 'Typically 7–30 business days.'], ['Payment Cleared', 'Buyer payment received & verified.'], ['Payout to You', 'Transferred to your bank via NEFT/IMPS.']].map(([t,d], i) => (
               <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
                 <div style={{ width: 20, height: 20, borderRadius: '50%', background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: '#ffffff', flexShrink: 0 }}>{i+1}</div>
@@ -894,7 +947,7 @@ function BuyMoreFlow({ holding, nowVal, adminPhone, user, onClose }) {
   if (done) return (
     <div style={{ textAlign: 'center', padding: '20px 0' }}>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
-      <div style={{ fontSize: 52, marginBottom: 12 }}>🎉</div>
+      <div style={{ width: 76, height: 76, borderRadius: '50%', background: C.greenBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}><Icon name="award" size={38} color={C.green} sw={1.7} /></div>
       <div style={{ fontSize: 18, fontWeight: 900, color: C.green, marginBottom: 8 }}>Interest Recorded!</div>
       <div style={{ fontSize: 12, color: C.muted, marginBottom: 20, lineHeight: 1.7 }}>Admin notified. They will contact you to arrange the additional investment.</div>
       <Btn label="Close" onClick={onClose} full />
@@ -1045,7 +1098,7 @@ function PortfolioScreen({ user }) {
           )
         })()}
 
-        {enriched.length === 0 && <Empty icon="📊" title="No holdings yet" sub="Your portfolio will appear here once your advisor adds your investments" />}
+        {enriched.length === 0 && <Empty icon="portfolio" title="No holdings yet" sub="Your portfolio will appear here once your advisor adds your investments" />}
 
         {/* Holdings */}
         {enriched.map((h, i) => {
@@ -1058,7 +1111,7 @@ function PortfolioScreen({ user }) {
               <div onClick={() => setSelected(isOpen ? null : i)}
                 style={{ background: isOpen ? 'rgba(0,179,134,0.06)' : C.card, border: `1px solid ${isOpen ? C.goldBd : C.border}`, borderRadius: isOpen ? '16px 16px 0 0' : 16, padding: 16, cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 13, background: '#eafaf3', border: '1px solid #00b38640', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🏛️</div>
+                  <div style={{ width: 46, height: 46, borderRadius: 13, background: '#eafaf3', border: '1px solid #00b38640', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon name="building" size={22} color={C.gold} /></div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>{h.companyName}</div>
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{h.sector}</div>
@@ -1096,7 +1149,9 @@ function PortfolioScreen({ user }) {
                     )}
                     {belowPeak && (
                       <div style={{ background: `${C.red}14`, border: `1px solid ${C.red}40`, borderRadius: 8, padding: '6px 10px', flex: 1, minWidth: 130 }}>
-                        <div style={{ fontSize: 8, color: C.muted, textTransform: 'uppercase' }}>📉 Below Peak ({fmtL(h.peakVal)})</div>
+                        <div style={{ fontSize: 8, color: C.muted, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Icon name="trendDown" size={10} color={C.red} /> Below Peak ({fmtL(h.peakVal)})
+                        </div>
                         <div style={{ fontSize: 11, fontWeight: 800, color: C.red }}>
                           {h.peakDrawPct.toFixed(1)}% ({fmt(h.peakDrawAmt)})
                         </div>
@@ -1122,13 +1177,13 @@ function PortfolioScreen({ user }) {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <button onClick={() => setActiveSheet('sell')}
                       style={{ background: C.redBg, border: `1.5px solid ${C.red}44`, borderRadius: 12, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                      <div style={{ fontSize: 22 }}>💸</div>
+                      <Icon name="banknote" size={22} color={C.red} />
                       <div style={{ fontSize: 13, fontWeight: 900, color: C.red }}>Sell Stake</div>
                       <div style={{ fontSize: 9, color: C.muted, textAlign: 'center', lineHeight: 1.4 }}>List your stake for sale. Payout on buyer match.</div>
                     </button>
                     <button onClick={() => setActiveSheet('buyMore')}
                       style={{ background: C.greenBg, border: `1.5px solid ${C.green}44`, borderRadius: 12, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                      <div style={{ fontSize: 22 }}>📈</div>
+                      <Icon name="trendUp" size={22} color={C.green} />
                       <div style={{ fontSize: 13, fontWeight: 900, color: C.green }}>Buy More</div>
                       <div style={{ fontSize: 9, color: C.muted, textAlign: 'center', lineHeight: 1.4 }}>Increase your stake at current valuation.</div>
                     </button>
@@ -1244,13 +1299,13 @@ function ProfileScreen({ user }) {
           </div>
           <div style={{ fontSize: 20, fontWeight: 900, color: C.text }}>{user.name || 'Investor'}</div>
           <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{user.email}</div>
-          <div style={{ marginTop: 10, display: 'inline-block', background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 20, padding: '4px 16px', fontSize: 11, color: C.gold, fontWeight: 700 }}>✦ Premium Member</div>
+          <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 5, background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 20, padding: '4px 16px', fontSize: 11, color: C.gold, fontWeight: 700 }}><Icon name="award" size={12} color={C.gold} /> Premium Member</div>
         </div>
 
         {/* Welcome note */}
         {user.welcomeNote && (
           <Card style={{ marginBottom: 14, background: '#e6f7f0', border: `1px solid ${C.goldBd}` }}>
-            <div style={{ fontSize: 10, color: C.gold, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>✉ Note from Anand Finco</div>
+            <div style={{ fontSize: 10, color: C.gold, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="mail" size={12} color={C.gold} /> Note from Anand Finco</div>
             <div style={{ fontSize: 13, color: C.text2, lineHeight: 1.7, fontStyle: 'italic' }}>"{user.welcomeNote}"</div>
           </Card>
         )}
@@ -1258,9 +1313,9 @@ function ProfileScreen({ user }) {
         {/* Info */}
         <Card style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 11, color: C.muted, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 14 }}>Personal Information</div>
-          {[['📧', 'Email', user.email || '—'], ['📱', 'Phone', user.phone || '—'], ['📍', 'City', user.city || '—'], ['🗓', 'Member Since', user.joinDate ? `Since ${user.joinDate}` : '—']].map(([ic, l, v]) => (
+          {[['mail', 'Email', user.email || '—'], ['phone', 'Phone', user.phone || '—'], ['mapPin', 'City', user.city || '—'], ['calendar', 'Member Since', user.joinDate ? `Since ${user.joinDate}` : '—']].map(([ic, l, v]) => (
             <div key={l} style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 14 }}>
-              <span style={{ fontSize: 20 }}>{ic}</span>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: C.goldBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon name={ic} size={16} color={C.gold} /></div>
               <div>
                 <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase', marginBottom: 2 }}>{l}</div>
                 <div style={{ fontSize: 13, color: C.text2, fontWeight: 600 }}>{v}</div>
@@ -1274,7 +1329,7 @@ function ProfileScreen({ user }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>KYC · PAN Card</div>
-              <div style={{ fontSize: 11, color: pan ? C.green : C.muted, marginTop: 3 }}>{pan ? 'Verified ✅' : 'Not added yet'}</div>
+              <div style={{ fontSize: 11, color: pan ? C.green : C.muted, marginTop: 3 }}>{pan ? 'Verified' : 'Not added yet'}</div>
             </div>
             {!editing && <button onClick={() => setEdit(true)}
               style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 9, padding: '5px 12px', color: C.gold, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{pan ? 'Edit' : '+ Add'}</button>}
@@ -1282,7 +1337,7 @@ function ProfileScreen({ user }) {
           {!editing
             ? pan
               ? <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: C.greenBg, border: `1px solid ${C.green}33`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✅</div>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: C.greenBg, border: `1px solid ${C.green}33`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="checkCircle" size={19} color={C.green} /></div>
                 <div>
                   <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase' }}>PAN Number</div>
                   <div style={{ fontSize: 17, fontWeight: 900, color: C.text, letterSpacing: 2.5, marginTop: 3 }}>{pan}</div>
@@ -1301,7 +1356,7 @@ function ProfileScreen({ user }) {
 
         <button onClick={() => signOut(auth)}
           style={{ width: '100%', background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 14, padding: 15, color: C.red, fontWeight: 800, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit' }}>
-          🚪 Sign Out
+          <Icon name="logout" size={16} /> Sign Out
         </button>
         <div style={{ textAlign: 'center', fontSize: 10, color: C.dim, marginTop: 18 }}>Anand Finco · SEBI Registered · © 2025</div>
       </div>
@@ -1392,7 +1447,7 @@ function AdminCompanies() {
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
-        {companies.length === 0 && <Empty icon="🏢" title="No companies yet" sub="Tap + Add to create your first opportunity" />}
+        {companies.length === 0 && <Empty icon="building" title="No companies yet" sub="Tap + Add to create your first opportunity" />}
         {companies.map(co => (
           <Card key={co.id} style={{ marginBottom: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
@@ -1405,8 +1460,8 @@ function AdminCompanies() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 7, marginLeft: 8 }}>
-                <button onClick={() => startEdit(co)} style={{ background: 'rgba(15,23,32,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '6px 9px', cursor: 'pointer', fontSize: 13 }}>✏️</button>
-                <button onClick={() => setConfirm({ id: co.id, msg: `Delete "${co.name}"? This is permanent.` })} style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 8, padding: '6px 9px', cursor: 'pointer', fontSize: 13 }}>🗑️</button>
+                <button onClick={() => startEdit(co)} style={{ background: 'rgba(15,23,32,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '6px 9px', cursor: 'pointer', display: 'flex' }}><Icon name="edit" size={15} color={C.muted} /></button>
+                <button onClick={() => setConfirm({ id: co.id, msg: `Delete "${co.name}"? This is permanent.` })} style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 8, padding: '6px 9px', cursor: 'pointer', display: 'flex' }}><Icon name="trash" size={15} color={C.red} /></button>
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
@@ -1419,7 +1474,7 @@ function AdminCompanies() {
             </div>
             {/* Live valuation updater */}
             <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: 12, marginBottom: 10 }}>
-              <div style={{ fontSize: 10, color: C.gold, fontWeight: 700, marginBottom: 8 }}>🔄 Update Valuation — reflects live in all client portfolios</div>
+              <div style={{ fontSize: 10, color: C.gold, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="refresh" size={11} color={C.gold} /> Update Valuation — reflects live in all client portfolios</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input value={valMap[co.id] || ''} onChange={e => setValMap(p => ({ ...p, [co.id]: e.target.value }))}
                   placeholder={`New value (now: ${fmtL(co.currentValuation)})`} type="number"
@@ -1431,8 +1486,9 @@ function AdminCompanies() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 12, color: C.muted }}>Show to clients</span>
               <button onClick={() => toggleActive(co)}
-                style={{ background: co.active ? C.redBg : C.greenBg, border: `1px solid ${co.active ? C.red : C.green}44`, borderRadius: 8, padding: '5px 14px', color: co.active ? C.red : C.green, fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                {co.active ? '🔴 Hide from clients' : '🟢 Show to clients'}
+                style={{ background: co.active ? C.redBg : C.greenBg, border: `1px solid ${co.active ? C.red : C.green}44`, borderRadius: 8, padding: '5px 14px', color: co.active ? C.red : C.green, fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: co.active ? C.red : C.green, flexShrink: 0 }} />
+                {co.active ? 'Hide from clients' : 'Show to clients'}
               </button>
             </div>
           </Card>
@@ -1499,11 +1555,11 @@ function AdminNotifications() {
             {unread > 0 ? `${unread} new unread` : 'All caught up ✓'}
           </div>
         </div>
-        <button onClick={load} style={{ background: 'rgba(15,23,32,0.05)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>🔄 Refresh</button>
+        <button onClick={load} style={{ background: 'rgba(15,23,32,0.05)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="refresh" size={13} color={C.muted} /> Refresh</button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
         {loading && <Loader />}
-        {!loading && notifs.length === 0 && <Empty icon="🔔" title="No requests yet" sub="When clients tap 'Invest Now', their requests appear here" />}
+        {!loading && notifs.length === 0 && <Empty icon="bell" title="No requests yet" sub="When clients tap 'Invest Now', their requests appear here" />}
         {notifs.map(n => (
           <div key={n.id} onClick={() => markRead(n)}
             style={{ background: n.read ? C.card : 'rgba(0,179,134,0.07)', border: `1px solid ${n.read ? C.border : C.goldBd}`, borderRadius: 16, padding: 16, marginBottom: 12, cursor: 'pointer' }}>
@@ -1524,8 +1580,8 @@ function AdminNotifications() {
               ))}
             </div>
             <button onClick={e => { e.stopPropagation(); openWA(n) }}
-              style={{ width: '100%', background: 'linear-gradient(90deg,#25D366,#128C7E)', border: 'none', borderRadius: 11, padding: 12, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
-              💬 WhatsApp {n.clientName?.split(' ')[0]} Now
+              style={{ width: '100%', background: 'linear-gradient(90deg,#25D366,#128C7E)', border: 'none', borderRadius: 11, padding: 12, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+              <Icon name="chat" size={15} color="#fff" /> WhatsApp {n.clientName?.split(' ')[0]} Now
             </button>
           </div>
         ))}
@@ -1591,7 +1647,7 @@ function AdminPortfolios() {
         <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Select a client to manage their holdings</div>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
-        {clients.length === 0 && <Empty icon="📋" title="No clients yet" sub="Add clients first from the Clients tab" />}
+        {clients.length === 0 && <Empty icon="clipboard" title="No clients yet" sub="Add clients first from the Clients tab" />}
         {clients.map(c => (
           <Card key={c.id} style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => selectClient(c)}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#ffffff', fontSize: 18, flexShrink: 0 }}>{(c.name || '?')[0]}</div>
@@ -1619,7 +1675,7 @@ function AdminPortfolios() {
         <Btn label="+ Add" onClick={() => setSheet(true)} sm />
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
-        {holdings.length === 0 && <Empty icon="📊" title="No holdings" sub="Add holdings using the + Add button" />}
+        {holdings.length === 0 && <Empty icon="portfolio" title="No holdings" sub="Add holdings using the + Add button" />}
         {holdings.map((h, i) => {
           const co   = companies.find(c => c.id === h.companyId)
           const curr = (h.stake / 100) * (co?.currentValuation || h.buyValuation)
@@ -1718,10 +1774,10 @@ function AdminSellRequests() {
           <div style={{ fontSize: 22, fontWeight: 900, color: C.text }}>Sell Requests</div>
           <div style={{ fontSize: 11, color: unread > 0 ? C.red : C.muted, marginTop: 2 }}>{unread > 0 ? `${unread} new pending` : 'All reviewed ✓'}</div>
         </div>
-        <button onClick={load} style={{ background: 'rgba(15,23,32,0.05)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>🔄 Refresh</button>
+        <button onClick={load} style={{ background: 'rgba(15,23,32,0.05)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="refresh" size={13} color={C.muted} /> Refresh</button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
-        {reqs.length === 0 && <Empty icon="📤" title="No sell requests" sub="When clients submit sell requests, they appear here." />}
+        {reqs.length === 0 && <Empty icon="inbox" title="No sell requests" sub="When clients submit sell requests, they appear here." />}
 
         {pending.length > 0 && <>
           <div style={{ fontSize: 10, color: C.red, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>⏳ Pending ({pending.length})</div>
@@ -1746,7 +1802,7 @@ function AdminSellRequests() {
               </div>
               {r.bankAccountName && (
                 <div style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
-                  <div style={{ fontSize: 10, color: C.blue, fontWeight: 800, marginBottom: 8 }}>🏦 Payout Bank</div>
+                  <div style={{ fontSize: 10, color: C.blue, fontWeight: 800, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="bank" size={12} color={C.blue} /> Payout Bank</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                     {[['Name', r.bankAccountName], ['Bank', r.bankName], ['Account', r.bankAccountNo], ['IFSC', r.bankIFSC]].map(([l, v]) => (
                       <div key={l}>
@@ -1762,15 +1818,15 @@ function AdminSellRequests() {
                   <div style={{ fontSize: 9, color: C.muted }}>PAYOUT AMOUNT</div>
                   <div style={{ fontSize: 20, fontWeight: 900, color: C.green }}>{fmt(r.expectedPayout)}</div>
                 </div>
-                <div style={{ fontSize: 26 }}>💸</div>
+                <Icon name="wallet" size={26} color={C.green} />
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => setConf({ msg: `Approve sell of ${r.sellPercent}% stake in ${r.companyName} for ${fmt(r.expectedPayout)}?`, onYes: () => approve(r) })}
-                  style={{ flex: 1, background: C.greenBg, border: `1px solid ${C.green}44`, borderRadius: 10, padding: 11, color: C.green, fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  ✅ Approve
+                  style={{ flex: 1, background: C.greenBg, border: `1px solid ${C.green}44`, borderRadius: 10, padding: 11, color: C.green, fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <Icon name="checkCircle" size={15} /> Approve
                 </button>
                 <button onClick={() => setConf({ msg: `Reject ${r.clientName}'s sell request?`, onYes: () => reject(r) })}
-                  style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 10, padding: '11px 16px', color: C.red, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>❌</button>
+                  style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 10, padding: '11px 16px', color: C.red, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center' }}><Icon name="xCircle" size={16} /></button>
               </div>
             </div>
           ))}
@@ -1782,7 +1838,7 @@ function AdminSellRequests() {
             <div key={r.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px 14px', marginBottom: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{r.clientName} — {r.companyName}</div>
-                <Badge label={r.status === 'approved' ? '✅ APPROVED' : '❌ REJECTED'} color={r.status === 'approved' ? C.green : C.red} />
+                <Badge label={r.status === 'approved' ? 'APPROVED' : 'REJECTED'} color={r.status === 'approved' ? C.green : C.red} />
               </div>
               <div style={{ fontSize: 11, color: C.muted, marginTop: 5 }}>{r.sellPercent}% of stake · {fmt(r.expectedPayout)}</div>
             </div>
@@ -1848,7 +1904,7 @@ function AdminClients() {
         <Btn label="+ Add Client" onClick={() => setSheet(true)} sm />
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
-        {clients.length === 0 && <Empty icon="👥" title="No clients yet" sub="Tap '+ Add Client' to create your first client account" />}
+        {clients.length === 0 && <Empty icon="users" title="No clients yet" sub="Tap '+ Add Client' to create your first client account" />}
         {clients.map(c => (
           <Card key={c.id} style={{ marginBottom: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -1859,7 +1915,7 @@ function AdminClients() {
                 {c.pan && <div style={{ fontSize: 10, color: C.gold, marginTop: 2, fontWeight: 700 }}>PAN: {c.pan}</div>}
               </div>
               {c.phone && (
-                <button onClick={() => openWA(c)} style={{ background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.3)', borderRadius: 10, padding: '8px 11px', fontSize: 18, cursor: 'pointer', flexShrink: 0 }}>💬</button>
+                <button onClick={() => openWA(c)} style={{ background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.3)', borderRadius: 10, padding: '8px 11px', cursor: 'pointer', flexShrink: 0, display: 'flex' }}><Icon name="chat" size={17} color="#128C7E" /></button>
               )}
             </div>
             {c.welcomeNote && <div style={{ fontSize: 11, color: C.muted, marginTop: 10, padding: '8px 12px', background: 'rgba(15,23,32,0.03)', borderRadius: 8, fontStyle: 'italic' }}>"{c.welcomeNote}"</div>}
@@ -1925,7 +1981,7 @@ function AdminSettings({ user }) {
 
         {/* WhatsApp */}
         <Card style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 6 }}>💬 WhatsApp Notification Number</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 7 }}><Icon name="chat" size={15} color="#25D366" /> WhatsApp Notification Number</div>
           <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.7, marginBottom: 14 }}>
             When clients tap "Invest Now", a WhatsApp message opens to this number. Used for all direct client contact.
           </div>
@@ -1935,7 +1991,7 @@ function AdminSettings({ user }) {
 
         {/* Firestore rules */}
         <Card style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 10 }}>🔐 Firestore Security Rules</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 7 }}><Icon name="lock" size={15} /> Firestore Security Rules</div>
           <div style={{ fontSize: 12, color: C.muted, marginBottom: 12 }}>Copy-paste in Firebase Console → Firestore → Rules tab:</div>
           <div style={{ background: 'rgba(15,23,32,0.04)', borderRadius: 10, padding: 14, border: `1px solid rgba(15,23,32,0.06)` }}>
             <pre style={{ fontSize: 9, color: '#0a6b4a', lineHeight: 1.7, whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{`rules_version = '2';
@@ -1978,7 +2034,7 @@ service cloud.firestore {
           </div>
         </Card>
 
-        <Btn label="🚪  Sign Out" onClick={() => signOut(auth)} danger full />
+        <Btn label="Sign Out" icon={<Icon name="logout" size={15} />} onClick={() => signOut(auth)} danger full />
         <div style={{ textAlign: 'center', fontSize: 10, color: C.dim, marginTop: 18, lineHeight: 1.7 }}>Anand Finco Pvt Ltd · SEBI Registered Investment Advisor · © 2025</div>
       </div>
     </div>
@@ -1991,10 +2047,10 @@ service cloud.firestore {
 function ClientApp({ user }) {
   const [tab, setTab] = useState('home')
   const TABS = [
-    { id: 'home',      icon: '🏠', label: 'Home' },
-    { id: 'portfolio', icon: '📊', label: 'Portfolio' },
-    { id: 'news',      icon: '📰', label: 'News' },
-    { id: 'profile',   icon: '👤', label: 'Profile' },
+    { id: 'home',      icon: 'home',      label: 'Home' },
+    { id: 'portfolio', icon: 'portfolio', label: 'Portfolio' },
+    { id: 'news',      icon: 'news',      label: 'News' },
+    { id: 'profile',   icon: 'user',      label: 'Profile' },
   ]
   return (
     <>
@@ -2027,12 +2083,12 @@ function AdminApp({ user }) {
   }, [])
 
   const TABS = [
-    { id: 'companies',  icon: '🏢', label: 'Companies' },
-    { id: 'portfolios', icon: '📊', label: 'Portfolios' },
-    { id: 'notifs',     icon: '🔔', label: 'Requests', badge: unread },
-    { id: 'sell',       icon: '💸', label: 'Sell Reqs' },
-    { id: 'clients',    icon: '👥', label: 'Clients' },
-    { id: 'settings',   icon: '⚙️', label: 'Settings' },
+    { id: 'companies',  icon: 'building', label: 'Companies' },
+    { id: 'portfolios', icon: 'portfolio', label: 'Portfolios' },
+    { id: 'notifs',     icon: 'bell',     label: 'Requests', badge: unread },
+    { id: 'sell',       icon: 'banknote', label: 'Sell Reqs' },
+    { id: 'clients',    icon: 'users',    label: 'Clients' },
+    { id: 'settings',   icon: 'settings', label: 'Settings' },
   ]
   return (
     <>
