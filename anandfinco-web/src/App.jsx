@@ -54,6 +54,26 @@ select option{background:${C.bg2}}
 .logoAnim{animation:logoIn .9s cubic-bezier(.34,1.56,.64,1) both, glowPulse 3.2s ease-in-out infinite .9s}
 .cardAnim{animation:cardIn .6s cubic-bezier(.22,1,.36,1) .15s both}
 .shimmerText{background:linear-gradient(90deg,#0f7a5c 0%,#00d09c 25%,#0f7a5c 50%,#00b386 75%,#0f7a5c 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmerSweep 4s linear infinite}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes bounceIn{0%{opacity:0;transform:translateY(26px) scale(.93)}55%{opacity:1;transform:translateY(-7px) scale(1.012)}78%{transform:translateY(2px) scale(.997)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes panelIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes orbDrift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,-22px) scale(1.08)}}
+@keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.glass{background:rgba(255,255,255,.58);-webkit-backdrop-filter:blur(14px) saturate(165%);backdrop-filter:blur(14px) saturate(165%);border:1px solid rgba(255,255,255,.78);box-shadow:0 8px 30px rgba(15,23,32,.08),inset 0 1px 0 rgba(255,255,255,.9)}
+.glassSoft{background:rgba(255,255,255,.52);border:1px solid rgba(255,255,255,.72)}
+.bounceIn{animation:bounceIn .75s cubic-bezier(.34,1.56,.64,1) backwards}
+.bounceFloat{animation:bounceIn .75s cubic-bezier(.34,1.56,.64,1) backwards,floatY 5.5s ease-in-out .8s infinite}
+.pressable{transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.pressable:active{transform:scale(.985)}
+.tap{transition:transform .18s cubic-bezier(.34,1.56,.64,1)}
+.tap:active{transform:scale(.96)}
+.sheetUp{animation:sheetUp .38s cubic-bezier(.22,1,.36,1) backwards}
+.panelIn{animation:panelIn .28s ease backwards}
+.orbDrift{animation:orbDrift 9s ease-in-out infinite}
+.growX{transform-origin:left center;animation:growX .9s cubic-bezier(.22,1,.36,1) .25s backwards}
+@supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.glass{background:rgba(255,255,255,.94)}}
+@media (prefers-reduced-motion:reduce){.bounceIn,.bounceFloat,.sheetUp,.panelIn,.orbDrift,.growX,.orb1,.orb2{animation:none!important}}
 `
 function InjectCSS() {
   useEffect(() => {
@@ -113,6 +133,7 @@ const ICONS = {
   phone:       <path d="M21 16.5v2.5a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 1.1 3.2 2 2 0 0 1 3.1 1h2.5a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L6.6 8.6a16 16 0 0 0 6 6l1.1-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.5 2Z"/>,
   mapPin:      <><path d="M19.5 10.2c0 6-7.5 11.3-7.5 11.3s-7.5-5.3-7.5-11.3a7.5 7.5 0 0 1 15 0Z"/><circle cx="12" cy="10" r="2.6"/></>,
   calendar:    <><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><line x1="15.5" y1="2.5" x2="15.5" y2="6.5"/><line x1="8.5" y1="2.5" x2="8.5" y2="6.5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/></>,
+  pie:         <><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5"/><path d="M20.5 10A8.5 8.5 0 0 0 14 3.5V10Z"/></>,
 }
 function Icon({ name, size = 18, color = 'currentColor', sw = 2, style }) {
   const p = ICONS[name]
@@ -326,6 +347,234 @@ function CountUp({ value, format }) {
   return <>{format ? format(display) : Math.round(display)}</>
 }
 
+// ── Portfolio allocation popup (donut chart) ──────────────────────────────────
+const PIE_COLORS = ['#00b386', '#2563eb', '#f59e0b', '#8b5cf6', '#e11d48', '#0ea5e9', '#14b8a6', '#f97316', '#84cc16', '#ec4899']
+
+// staggered animation delays: [entrance bounce, start of floating]
+const stagger = (i, base = 0) => {
+  const d = base + i * 0.07
+  return { animationDelay: `${d.toFixed(2)}s, ${(d + 0.8).toFixed(2)}s` }
+}
+
+// One row per company (same company held twice is merged)
+function buildAllocItems(holdings, companies) {
+  const map = new Map()
+  ;(Array.isArray(holdings) ? holdings : []).forEach((h, idx) => {
+    const stake  = Number(h.stake) || 0
+    const buyVal = Number(h.buyValuation) || 0
+    const co     = (Array.isArray(companies) ? companies : []).find(c => c.id === h.companyId)
+    const nowVal = Number(co?.currentValuation) || buyVal
+    const invested = (stake / 100) * buyVal
+    const current  = (stake / 100) * nowVal
+    const key = h.companyId || h.companyName || `h${idx}`
+    const prev = map.get(key)
+    if (prev) { prev.invested += invested; prev.current += current; prev.stake += stake }
+    else map.set(key, { key, name: h.companyName || co?.name || 'Unknown', sector: h.sector || co?.sector || '', stake, invested, current })
+  })
+  return [...map.values()]
+}
+
+// Percentages with 1 decimal that add up to exactly 100.0 (largest-remainder method)
+function sharePcts(values) {
+  const tot = values.reduce((a, b) => a + b, 0)
+  if (!(tot > 0)) return values.map(() => 0)
+  const raw = values.map(v => (v / tot) * 1000)
+  const fl  = raw.map(Math.floor)
+  let rem = 1000 - fl.reduce((a, b) => a + b, 0)
+  const order = raw.map((r, i) => [r - fl[i], i]).sort((a, b) => b[0] - a[0])
+  for (let k = 0; k < order.length && rem > 0; k++, rem--) fl[order[k][1]]++
+  return fl.map(x => x / 10)
+}
+
+function AllocationSheet({ show, onClose, items }) {
+  const [mode,   setMode]   = useState('current')   // 'current' | 'invested'
+  const [active, setActive] = useState(null)        // key of highlighted company
+  const [ready,  setReady]  = useState(false)       // triggers donut draw-in
+
+  useEffect(() => {
+    if (!show) { setReady(false); setActive(null); return }
+    const t = setTimeout(() => setReady(true), 80)
+    const onKey = e => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => { clearTimeout(t); window.removeEventListener('keydown', onKey) }
+  }, [show])
+
+  if (!show) return null
+
+  const list  = Array.isArray(items) ? items : []
+  const totI  = list.reduce((s, x) => s + x.invested, 0)
+  const totC  = list.reduce((s, x) => s + x.current, 0)
+  const totG  = totC - totI
+  const totP  = totI > 0 ? (totG / totI) * 100 : 0
+
+  const val    = x => (mode === 'current' ? x.current : x.invested)
+  const total  = mode === 'current' ? totC : totI
+  const hasData = total > 0
+
+  // colours stay with a company when switching view
+  const base    = [...list].sort((a, b) => b.current - a.current)
+  const colorOf = new Map(base.map((x, i) => [x.key, PIE_COLORS[i % PIE_COLORS.length]]))
+  const sorted  = [...list].sort((a, b) => val(b) - val(a))
+  const shares  = sharePcts(sorted.map(val))
+  const visible = shares.filter(s => s > 0).length
+
+  const R = 76, SW = 26, CIRC = 2 * Math.PI * R
+  let cum = 0
+  const segs = sorted.map((x, i) => {
+    const frac = shares[i] / 100
+    const gap  = visible > 1 ? 2.4 : 0
+    const len  = Math.max(0, frac * CIRC - gap)
+    const seg  = { key: x.key, color: colorOf.get(x.key), len, offset: -(cum * CIRC + gap / 2) }
+    cum += frac
+    return seg
+  })
+  const act     = active ? sorted.findIndex(x => x.key === active) : -1
+  const actItem = act >= 0 ? sorted[act] : null
+
+  const stats = [
+    ['Total Invested', fmt(totI),                        C.text,  'wallet',    C.blue],
+    ['Current Value',  fmt(totC),                        '#0a7a52', 'portfolio', C.gold],
+    ['Total Gain / Loss', (totG >= 0 ? '+' : '') + fmt(totG), gc(totG), totG >= 0 ? 'trendUp' : 'trendDown', gc(totG)],
+    ['Overall Return', pct(totP),                        gc(totP), 'award',     gc(totP)],
+  ]
+
+  return (
+    <div onClick={onClose} role="presentation"
+      style={{ position: 'fixed', inset: 0, background: 'rgba(8,20,16,0.55)', zIndex: 300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div role="dialog" aria-modal="true" aria-label="Portfolio overview" onClick={e => e.stopPropagation()} className="sheetUp"
+        style={{ position: 'relative', width: '100%', maxWidth: 430, maxHeight: '92dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          borderTopLeftRadius: 28, borderTopRightRadius: 28, boxShadow: '0 -10px 50px rgba(0,0,0,0.25)',
+          background: 'linear-gradient(165deg,#d2f3e5 0%,#eaf7f2 40%,#dbe9fd 100%)' }}>
+
+        {/* floating colour orbs (give the glass something to blur) */}
+        <div className="orbDrift" style={{ position: 'absolute', top: -50, left: -60, width: 230, height: 230, borderRadius: '50%', background: 'radial-gradient(circle,rgba(0,179,134,.5) 0%,transparent 68%)', filter: 'blur(28px)', pointerEvents: 'none' }} />
+        <div className="orbDrift" style={{ position: 'absolute', top: '30%', right: -80, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle,rgba(59,130,246,.4) 0%,transparent 68%)', filter: 'blur(30px)', pointerEvents: 'none', animationDelay: '-3s', animationDuration: '11s' }} />
+        <div className="orbDrift" style={{ position: 'absolute', bottom: -60, left: '20%', width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(circle,rgba(245,158,11,.32) 0%,transparent 68%)', filter: 'blur(30px)', pointerEvents: 'none', animationDelay: '-6s', animationDuration: '13s' }} />
+
+        {/* header */}
+        <div style={{ position: 'relative', zIndex: 2, padding: '10px 20px 8px', flexShrink: 0 }}>
+          <div style={{ width: 42, height: 4, borderRadius: 99, background: 'rgba(15,23,32,0.18)', margin: '0 auto 12px' }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: C.text }}>Portfolio Overview</div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{list.length} {list.length === 1 ? 'company' : 'companies'} · live valuation</div>
+            </div>
+            <button onClick={onClose} aria-label="Close" className="glassSoft tap"
+              style={{ width: 34, height: 34, borderRadius: 11, cursor: 'pointer', color: C.muted, fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}>×</button>
+          </div>
+        </div>
+
+        <div style={{ position: 'relative', zIndex: 1, flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain', padding: '8px 18px 28px' }}>
+          {list.length === 0 ? (
+            <div className="glass bounceIn" style={{ borderRadius: 22, padding: 28, textAlign: 'center', color: C.muted, fontSize: 13 }}>
+              No holdings to show yet.
+            </div>
+          ) : (<>
+            {/* totals */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+              {stats.map(([label, value, color, icon, tint], i) => (
+                <div key={label} className="bounceFloat" style={stagger(i)}>
+                  <div className="glass" style={{ borderRadius: 18, padding: '13px 14px', position: 'relative' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <div style={{ width: 22, height: 22, borderRadius: 7, background: `${tint}1f`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Icon name={icon} size={12} color={tint} />
+                      </div>
+                      <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</div>
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 900, color }}>{value}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* donut chart */}
+            <div className="bounceFloat" style={stagger(4)}>
+              <div className="glass" style={{ borderRadius: 24, padding: '16px 16px 18px', marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: C.text }}>Allocation</div>
+                  <div className="glassSoft" style={{ display: 'flex', gap: 3, padding: 3, borderRadius: 12 }}>
+                    {[['current', 'Current Value'], ['invested', 'Invested']].map(([id, label]) => (
+                      <button key={id} onClick={() => setMode(id)} aria-pressed={mode === id}
+                        style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit', borderRadius: 9, padding: '6px 10px', fontSize: 10, fontWeight: 800,
+                          background: mode === id ? `linear-gradient(135deg,${C.gold},${C.goldL})` : 'transparent',
+                          color: mode === id ? '#ffffff' : C.muted, transition: 'background .2s, color .2s' }}>{label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {!hasData ? (
+                  <div style={{ textAlign: 'center', color: C.muted, fontSize: 12, padding: '30px 0' }}>No investment data to chart yet.</div>
+                ) : (
+                  <div style={{ position: 'relative', width: 230, height: 230, margin: '4px auto 0' }}>
+                    <svg viewBox="0 0 200 200" width="230" height="230" role="img" aria-label="Portfolio allocation donut chart" style={{ display: 'block' }}>
+                      <circle cx="100" cy="100" r={R} fill="none" stroke="rgba(15,23,32,0.06)" strokeWidth={SW} />
+                      {segs.map((s, i) => {
+                        const isAct = act === i
+                        return (
+                          <circle key={s.key} cx="100" cy="100" r={R} fill="none" stroke={s.color} transform="rotate(-90 100 100)"
+                            onClick={() => setActive(a => (a === s.key ? null : s.key))}
+                            style={{ cursor: 'pointer', strokeLinecap: 'butt', strokeWidth: isAct ? SW + 5 : SW,
+                              strokeDasharray: `${ready ? s.len : 0} ${CIRC}`, strokeDashoffset: s.offset,
+                              opacity: act >= 0 && !isAct ? 0.38 : 1,
+                              transition: 'stroke-dasharray .9s cubic-bezier(.22,1,.36,1), stroke-dashoffset .9s cubic-bezier(.22,1,.36,1), stroke-width .25s, opacity .25s' }} />
+                        )
+                      })}
+                    </svg>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', textAlign: 'center', padding: '0 48px' }}>
+                      {actItem ? (<>
+                        <div style={{ fontSize: 10, color: C.muted, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{actItem.name}</div>
+                        <div style={{ fontSize: 24, fontWeight: 900, color: colorOf.get(actItem.key), lineHeight: 1.2 }}>{shares[act].toFixed(1)}%</div>
+                        <div style={{ fontSize: 11, fontWeight: 800, color: C.text }}>{fmtL(val(actItem))}</div>
+                      </>) : (<>
+                        <div style={{ fontSize: 10, color: C.muted }}>{mode === 'current' ? 'Total Value' : 'Total Invested'}</div>
+                        <div style={{ fontSize: 19, fontWeight: 900, color: '#0a7a52', lineHeight: 1.25 }}>{fmtL(total)}</div>
+                        <div style={{ fontSize: 10, color: C.muted }}>100%</div>
+                      </>)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* company legend */}
+            <div style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8, margin: '4px 4px 10px' }}>
+              {mode === 'current' ? 'By current value' : 'By amount invested'}
+            </div>
+            {sorted.map((x, i) => {
+              const color = colorOf.get(x.key)
+              const isAct = act === i
+              const g  = x.current - x.invested
+              const gp = x.invested > 0 ? (g / x.invested) * 100 : 0
+              return (
+                <button key={x.key} className="glassSoft bounceIn tap" onClick={() => setActive(a => (a === x.key ? null : x.key))}
+                  style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, borderRadius: 18, padding: '12px 14px', marginBottom: 10,
+                    cursor: 'pointer', fontFamily: 'inherit', color: 'inherit', boxShadow: '0 6px 20px rgba(15,23,32,0.06)', border: isAct ? `1.5px solid ${color}` : undefined, ...stagger(i, 0.35) }}>
+                  <div style={{ width: 12, height: 12, borderRadius: 4, background: color, flexShrink: 0, boxShadow: `0 0 10px ${color}77` }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.name}</div>
+                    <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>
+                      {x.sector ? `${x.sector} · ` : ''}Invested {fmtL(x.invested)}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 900, color }}>{shares[i].toFixed(1)}%</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: gc(g), marginTop: 2 }}>{fmtL(x.current)} · {pct(gp)}</div>
+                  </div>
+                </button>
+              )
+            })}
+            <div className="glassSoft" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: 14, padding: '11px 14px', marginTop: 4 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: C.text2 }}>Total</span>
+              <span style={{ fontSize: 12, fontWeight: 900, color: C.text }}>{shares.reduce((a, b) => a + b, 0).toFixed(1)}% · {fmt(total)}</span>
+            </div>
+            <div style={{ textAlign: 'center', fontSize: 10, color: C.dim, marginTop: 14 }}>Based on live company valuations · tap a slice or row to highlight</div>
+          </>)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Bottom Nav ────────────────────────────────────────────────────────────────
 function BottomNav({ tabs, active, onChange }) {
   return (
@@ -434,6 +683,7 @@ function HomeScreen({ user }) {
   const [sending,    setSending]    = useState(false)
   const [done,       setDone]       = useState(false)
   const [toast,      setToast]      = useState(null)
+  const [allocOpen,  setAllocOpen]  = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -482,6 +732,7 @@ function HomeScreen({ user }) {
   return (
     <div style={{ flex: 1, overflowY: 'auto' }}>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
+      <AllocationSheet show={allocOpen} onClose={() => setAllocOpen(false)} items={buildAllocItems(portfolio, companies)} />
 
       {/* Header */}
       <div style={{ background: 'linear-gradient(160deg,#eafaf3,#ffffff)', padding: '52px 20px 20px' }}>
@@ -496,9 +747,17 @@ function HomeScreen({ user }) {
             {(user.name || 'I')[0]}
           </div>
         </div>
-        {/* Summary card */}
-        <div style={{ background: '#ffffff', border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 18, boxShadow: '0 4px 20px rgba(15,23,32,0.06)' }}>
-          <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1 }}>TOTAL PORTFOLIO VALUE</div>
+        {/* Summary card — tap to see allocation */}
+        <div className="pressable" role="button" tabIndex={0} aria-label="View portfolio allocation"
+          onClick={() => setAllocOpen(true)}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAllocOpen(true) } }}
+          style={{ background: '#ffffff', border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 18, boxShadow: '0 4px 20px rgba(15,23,32,0.06)', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1 }}>TOTAL PORTFOLIO VALUE</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 99, padding: '4px 10px', fontSize: 10, fontWeight: 800, color: C.gold, flexShrink: 0 }}>
+              <Icon name="pie" size={12} color={C.gold} /> View breakdown <span style={{ fontSize: 12, lineHeight: 1 }}>›</span>
+            </div>
+          </div>
           <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 30, fontWeight: 800, color: '#0a7a52', margin: '6px 0 14px' }}>{fmt(totC)}</div>
           <div style={{ height: 1, background: C.border, marginBottom: 14 }} />
           <div style={{ display: 'flex', gap: 20 }}>
@@ -1005,6 +1264,7 @@ function PortfolioScreen({ user }) {
   const [selected,    setSelected]    = useState(null)   // expanded holding index
   const [activeSheet, setActiveSheet] = useState(null)   // 'sell' | 'buyMore'
   const [toast,       setToast]       = useState(null)
+  const [allocOpen,   setAllocOpen]   = useState(false)
 
   function load() {
     Promise.all([
@@ -1044,33 +1304,55 @@ function PortfolioScreen({ user }) {
   const totP = totI > 0 ? (totG / totI) * 100 : 0
 
   const selH = selected !== null ? enriched[selected] : null
+  const allocItems = buildAllocItems(holdings, companies)
 
   if (loading) return <Loader />
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto' }}>
+    <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(165deg,#e1f5ec 0%,#f4f8f6 42%,#e3edfb 100%)' }}>
+      {/* soft floating colour orbs behind the glass */}
+      <div className="orbDrift" style={{ position: 'absolute', top: -60, right: -70, width: 250, height: 250, borderRadius: '50%', background: 'radial-gradient(circle,rgba(0,179,134,.40) 0%,transparent 68%)', filter: 'blur(30px)', pointerEvents: 'none' }} />
+      <div className="orbDrift" style={{ position: 'absolute', top: '38%', left: -100, width: 270, height: 270, borderRadius: '50%', background: 'radial-gradient(circle,rgba(59,130,246,.28) 0%,transparent 68%)', filter: 'blur(32px)', pointerEvents: 'none', animationDelay: '-3s', animationDuration: '11s' }} />
+      <div className="orbDrift" style={{ position: 'absolute', bottom: -70, right: -40, width: 230, height: 230, borderRadius: '50%', background: 'radial-gradient(circle,rgba(245,158,11,.22) 0%,transparent 68%)', filter: 'blur(32px)', pointerEvents: 'none', animationDelay: '-6s', animationDuration: '13s' }} />
+
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
 
-      <div style={{ background: C.bg2, padding: '52px 18px 18px', borderBottom: `1px solid ${C.border}` }}>
+      <div className="glass" style={{ position: 'relative', zIndex: 2, flexShrink: 0, padding: '52px 18px 16px', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.7)', borderRadius: 0 }}>
         <div style={{ fontSize: 24, fontWeight: 900, color: C.text }}>My Portfolio</div>
         <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{enriched.length} holdings · Tap a card to buy / sell</div>
       </div>
 
-      <div style={{ padding: '18px 18px 40px' }}>
-        {/* Summary */}
-        <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 18, marginBottom: 22 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            {[
-              ['Total Invested',  totI, v => fmt(v),                                    C.text2],
-              ['Current Value',   totC, v => fmt(v),                                    C.gold],
-              ['Gain / Loss',     totG, v => (v >= 0 ? '+' : '') + fmt(v),               gc(totG)],
-              ['Overall Return',  totP, v => pct(v),                                    gc(totP)],
-            ].map(([l, raw, fmtr, c]) => (
-              <div key={l}>
-                <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase', marginBottom: 4 }}>{l}</div>
-                <div style={{ fontSize: 16, fontWeight: 900, color: c }}><CountUp value={raw} format={fmtr} /></div>
+      <div style={{ position: 'relative', zIndex: 1, flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 18px 40px' }}>
+        {/* Summary — tap to open the allocation popup */}
+        <div className="bounceFloat" style={{ marginBottom: 20, ...stagger(0) }}>
+          <div className="glass pressable" role="button" tabIndex={0} aria-label="View portfolio allocation"
+            onClick={() => setAllocOpen(true)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAllocOpen(true) } }}
+            style={{ position: 'relative', borderRadius: 26, padding: 20, cursor: 'pointer' }}>
+            <div style={{ position: 'absolute', inset: 0, borderRadius: 26, background: 'linear-gradient(135deg,rgba(255,255,255,0.6) 0%,rgba(255,255,255,0) 55%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, fontWeight: 700 }}>TOTAL PORTFOLIO VALUE</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 99, padding: '5px 10px', fontSize: 10, fontWeight: 800, color: C.gold, flexShrink: 0 }}>
+                  <Icon name="pie" size={12} color={C.gold} /> View breakdown <span style={{ fontSize: 12, lineHeight: 1 }}>›</span>
+                </div>
               </div>
-            ))}
+              <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 32, fontWeight: 800, color: '#0a7a52', margin: '8px 0 6px' }}>
+                <CountUp value={totC} format={fmt} />
+              </div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: `${gc(totP)}18`, border: `1px solid ${gc(totP)}40`, borderRadius: 99, padding: '4px 10px', fontSize: 11, fontWeight: 800, color: gc(totP) }}>
+                <Icon name={totP >= 0 ? 'trendUp' : 'trendDown'} size={12} color={gc(totP)} />
+                <span><CountUp value={totP} format={pct} /> overall return</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16 }}>
+                {[['Total Invested', totI, v => fmt(v), C.text2], ['Gain / Loss', totG, v => (v >= 0 ? '+' : '') + fmt(v), gc(totG)]].map(([l, raw, f, c]) => (
+                  <div key={l} className="glassSoft" style={{ borderRadius: 14, padding: '10px 12px' }}>
+                    <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase', marginBottom: 4 }}>{l}</div>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: c }}><CountUp value={raw} format={f} /></div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1078,22 +1360,26 @@ function PortfolioScreen({ user }) {
         {enriched.length > 0 && (() => {
           const sectors = enriched.reduce((a, h) => { a[h.sector] = (a[h.sector] || 0) + h.curr; return a }, {})
           return (
-            <div style={{ marginBottom: 22 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 14 }}>Sector Breakdown</div>
-              {Object.entries(sectors).sort(([, a], [, b]) => b - a).map(([sec, val]) => {
-                const p = totC > 0 ? (val / totC) * 100 : 0
-                return (
-                  <div key={sec} style={{ marginBottom: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                      <span style={{ fontSize: 12, color: C.text2, fontWeight: 600 }}>{sec}</span>
-                      <span style={{ fontSize: 12, color: C.gold, fontWeight: 700 }}>{p.toFixed(1)}% · {fmt(val)}</span>
+            <div className="bounceIn" style={stagger(1)}>
+              <div className="glass" style={{ borderRadius: 22, padding: 18, marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 14 }}>
+                  <Icon name="portfolio" size={15} color={C.gold} /> Sector Breakdown
+                </div>
+                {Object.entries(sectors).sort(([, a], [, b]) => b - a).map(([sec, val]) => {
+                  const p = totC > 0 ? (val / totC) * 100 : 0
+                  return (
+                    <div key={sec} style={{ marginBottom: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ fontSize: 12, color: C.text2, fontWeight: 600 }}>{sec}</span>
+                        <span style={{ fontSize: 12, color: C.gold, fontWeight: 700 }}>{p.toFixed(1)}% · {fmt(val)}</span>
+                      </div>
+                      <div style={{ height: 7, background: 'rgba(15,23,32,0.07)', borderRadius: 99, overflow: 'hidden' }}>
+                        <div className="growX" style={{ height: '100%', width: `${p}%`, background: `linear-gradient(90deg,${C.gold},${C.goldL})`, borderRadius: 99 }} />
+                      </div>
                     </div>
-                    <div style={{ height: 5, background: 'rgba(15,23,32,0.06)', borderRadius: 99, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${p}%`, background: C.gold, borderRadius: 99 }} />
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
           )
         })()}
@@ -1106,32 +1392,32 @@ function PortfolioScreen({ user }) {
           const hasMoved = Math.abs(h.sinceLastPct) > 0.01
           const belowPeak = h.peakDrawPct < -0.05
           return (
-            <div key={i} style={{ marginBottom: 14 }}>
+            <div key={i} className={enriched.length <= 6 ? 'bounceFloat' : 'bounceIn'} style={{ marginBottom: 16, ...stagger(i, 0.15) }}>
               {/* Card */}
-              <div onClick={() => setSelected(isOpen ? null : i)}
-                style={{ background: isOpen ? 'rgba(0,179,134,0.06)' : C.card, border: `1px solid ${isOpen ? C.goldBd : C.border}`, borderRadius: isOpen ? '16px 16px 0 0' : 16, padding: 16, cursor: 'pointer' }}>
+              <div className="glass pressable" onClick={() => setSelected(isOpen ? null : i)}
+                style={{ position: 'relative', background: isOpen ? 'rgba(255,255,255,0.74)' : undefined, border: `1px solid ${isOpen ? C.goldBd : 'rgba(255,255,255,0.78)'}`, borderRadius: isOpen ? '24px 24px 0 0' : 24, padding: 16, cursor: 'pointer', boxShadow: `0 10px 32px ${gc(h.g)}22, inset 0 1px 0 rgba(255,255,255,0.9)` }}>
+                <div style={{ position: 'absolute', left: 18, right: 18, top: 0, height: 3, borderRadius: '0 0 6px 6px', background: `linear-gradient(90deg,transparent,${gc(h.g)},transparent)`, opacity: 0.55, pointerEvents: 'none' }} />
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 13, background: '#eafaf3', border: '1px solid #00b38640', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon name="building" size={22} color={C.gold} /></div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: 14, background: 'linear-gradient(135deg,#dff7ec,#ffffff)', border: '1px solid rgba(0,179,134,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 14px rgba(0,179,134,0.18)' }}><Icon name="building" size={22} color={C.gold} /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>{h.companyName}</div>
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{h.sector}</div>
                   </div>
-                  <div style={{ background: `${gc(h.g)}18`, border: `1px solid ${gc(h.g)}44`, borderRadius: 9, padding: '5px 10px' }}>
+                  <div style={{ background: `${gc(h.g)}18`, border: `1px solid ${gc(h.g)}44`, borderRadius: 10, padding: '5px 10px', flexShrink: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: gc(h.g) }}>{pct(h.gp)}</div>
                   </div>
                 </div>
 
                 {/* Sparkline */}
-                <div style={{ marginBottom: 12, background: 'rgba(15,23,32,0.03)', borderRadius: 10, padding: '6px 8px' }}>
+                <div className="glassSoft" style={{ marginBottom: 12, borderRadius: 14, padding: '8px 10px' }}>
                   <Sparkline data={h.history} color={gc(h.g)} height={40} id={`h${i}`} />
                 </div>
 
-                <div style={{ height: 1, background: C.border, marginBottom: 14 }} />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
                   {[['Stake', `${h.stake}%`, C.text2], ['Invested', fmt(h.buy), C.text2], ['Current', fmt(h.curr), C.gold], ['P&L', (h.g >= 0 ? '+' : '') + fmt(h.g), gc(h.g)], ['Buy Val.', fmtL(h.buyValuation), C.muted], ['Now Val.', fmtL(h.nowVal), gc(h.vp)]].map(([l, v, c]) => (
-                    <div key={l}>
+                    <div key={l} className="glassSoft" style={{ borderRadius: 12, padding: '8px 10px', minWidth: 0 }}>
                       <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase', marginBottom: 3 }}>{l}</div>
-                      <div style={{ fontSize: 12, fontWeight: 800, color: c }}>{v}</div>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: c, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v}</div>
                     </div>
                   ))}
                 </div>
@@ -1140,7 +1426,7 @@ function PortfolioScreen({ user }) {
                 {(hasMoved || belowPeak) && (
                   <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
                     {hasMoved && (
-                      <div style={{ background: `${gc(h.sinceLastPct)}14`, border: `1px solid ${gc(h.sinceLastPct)}40`, borderRadius: 8, padding: '6px 10px', flex: 1, minWidth: 130 }}>
+                      <div style={{ background: `${gc(h.sinceLastPct)}14`, border: `1px solid ${gc(h.sinceLastPct)}40`, borderRadius: 12, padding: '7px 10px', flex: 1, minWidth: 130 }}>
                         <div style={{ fontSize: 8, color: C.muted, textTransform: 'uppercase' }}>Since Last Update</div>
                         <div style={{ fontSize: 11, fontWeight: 800, color: gc(h.sinceLastPct) }}>
                           {h.sinceLastPct >= 0 ? '+' : ''}{h.sinceLastPct.toFixed(1)}% ({h.sinceLastAmt >= 0 ? '+' : ''}{fmt(h.sinceLastAmt)})
@@ -1148,7 +1434,7 @@ function PortfolioScreen({ user }) {
                       </div>
                     )}
                     {belowPeak && (
-                      <div style={{ background: `${C.red}14`, border: `1px solid ${C.red}40`, borderRadius: 8, padding: '6px 10px', flex: 1, minWidth: 130 }}>
+                      <div style={{ background: `${C.red}14`, border: `1px solid ${C.red}40`, borderRadius: 12, padding: '7px 10px', flex: 1, minWidth: 130 }}>
                         <div style={{ fontSize: 8, color: C.muted, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 4 }}>
                           <Icon name="trendDown" size={10} color={C.red} /> Below Peak ({fmtL(h.peakVal)})
                         </div>
@@ -1170,19 +1456,19 @@ function PortfolioScreen({ user }) {
 
               {/* Action panel */}
               {isOpen && (
-                <div style={{ background: '#f8fbfa', border: `1px solid ${C.goldBd}`, borderTop: 'none', borderRadius: '0 0 16px 16px', padding: 16 }}>
+                <div className="glass panelIn" style={{ background: 'rgba(255,255,255,0.7)', border: `1px solid ${C.goldBd}`, borderTop: 'none', borderRadius: '0 0 24px 24px', padding: 16 }}>
                   <div style={{ fontSize: 11, color: C.muted, marginBottom: 12, textAlign: 'center' }}>
                     What would you like to do with <strong style={{ color: C.text }}>{h.companyName}</strong>?
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <button onClick={() => setActiveSheet('sell')}
-                      style={{ background: C.redBg, border: `1.5px solid ${C.red}44`, borderRadius: 12, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                    <button className="tap" onClick={() => setActiveSheet('sell')}
+                      style={{ background: C.redBg, border: `1.5px solid ${C.red}44`, borderRadius: 16, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                       <Icon name="banknote" size={22} color={C.red} />
                       <div style={{ fontSize: 13, fontWeight: 900, color: C.red }}>Sell Stake</div>
                       <div style={{ fontSize: 9, color: C.muted, textAlign: 'center', lineHeight: 1.4 }}>List your stake for sale. Payout on buyer match.</div>
                     </button>
-                    <button onClick={() => setActiveSheet('buyMore')}
-                      style={{ background: C.greenBg, border: `1.5px solid ${C.green}44`, borderRadius: 12, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                    <button className="tap" onClick={() => setActiveSheet('buyMore')}
+                      style={{ background: C.greenBg, border: `1.5px solid ${C.green}44`, borderRadius: 16, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                       <Icon name="trendUp" size={22} color={C.green} />
                       <div style={{ fontSize: 13, fontWeight: 900, color: C.green }}>Buy More</div>
                       <div style={{ fontSize: 9, color: C.muted, textAlign: 'center', lineHeight: 1.4 }}>Increase your stake at current valuation.</div>
@@ -1194,6 +1480,9 @@ function PortfolioScreen({ user }) {
           )
         })}
       </div>
+
+      {/* Allocation popup (donut chart) */}
+      <AllocationSheet show={allocOpen} onClose={() => setAllocOpen(false)} items={allocItems} />
 
       {/* Sell Sheet */}
       <Sheet show={activeSheet === 'sell'} onClose={() => setActiveSheet(null)} title={`Sell Stake — ${selH?.companyName || ''}`}>
