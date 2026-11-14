@@ -72,7 +72,7 @@ select option{background:${C.bg2}}
 .panelIn{animation:panelIn .28s ease backwards}
 .orbDrift{animation:orbDrift 9s ease-in-out infinite}
 .growX{transform-origin:left center;animation:growX .9s cubic-bezier(.22,1,.36,1) .25s backwards}
-@supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.glass{background:rgba(255,255,255,.94)}}
+@supports not (-webkit-backdrop-filter:blur(1px)){@supports not (backdrop-filter:blur(1px)){.glass{background:rgba(255,255,255,.94)}}}
 @media (prefers-reduced-motion:reduce){.bounceIn,.bounceFloat,.sheetUp,.panelIn,.orbDrift,.growX,.orb1,.orb2{animation:none!important}}
 `
 function InjectCSS() {
@@ -604,6 +604,7 @@ function LoginScreen() {
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoad]  = useState(false)
   const [error, setError]   = useState('')
+  const [legal, setLegal]   = useState(null)
 
   async function login() {
     if (!un || !pw) { setError('Enter username and password'); return }
@@ -667,6 +668,12 @@ function LoginScreen() {
         <div className="fadeUp" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, fontSize: 10, color: C.dim, marginTop: 18, animationDelay: '.4s' }}>
           <Icon name="lock" size={11} color={C.dim} /> Secured by Firebase Auth · SEBI Compliant
         </div>
+        <div className="fadeUp" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, fontSize: 11, marginTop: 10, animationDelay: '.5s' }}>
+          <button onClick={() => setLegal('terms')} style={{ background: 'none', border: 'none', color: C.muted, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 11, textDecoration: 'underline' }}>Terms &amp; Conditions</button>
+          <span style={{ color: C.dim }}>·</span>
+          <button onClick={() => setLegal('privacy')} style={{ background: 'none', border: 'none', color: C.muted, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 11, textDecoration: 'underline' }}>Privacy Policy</button>
+        </div>
+        <LegalSheet show={!!legal} doc={legal || 'terms'} onClose={() => setLegal(null)} />
       </div>
     </div>
   )
@@ -872,6 +879,9 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
   const [bank,     setBank]    = useState({ accountName:'', accountNo:'', confirmNo:'', ifsc:'', bankName:'', accountType:'savings' })
   const [errors,   setErrors]  = useState({})
   const [loading,  setLoad]    = useState(false)
+  const [agree,    setAgree]   = useState(false)
+  const [legal,    setLegal]   = useState(null)
+  const legalLink = { background: 'none', border: 'none', padding: 0, color: C.gold, fontWeight: 800, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }
 
   const stakeToSell  = parseFloat(((holding.stake * sellPct) / 100).toFixed(6))
   const askValNum    = parseInt(askVal) || 0
@@ -894,6 +904,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
   }
 
   async function submitSell() {
+    if (!agree) { setErrors({ submit: 'Please tick the box to accept the Terms & Conditions.' }); return }
     setLoad(true)
     try {
       await addDoc(collection(db, 'sellRequests'), {
@@ -917,6 +928,9 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
         bankAccountNo:   '●●●●' + bank.accountNo.slice(-4),
         bankIFSC:        bank.ifsc.toUpperCase(),
         bankAccountType: bank.accountType,
+        termsAccepted:   true,
+        termsVersion:    LEGAL.version,
+        termsAcceptedAt: Timestamp.now(),
         timestamp:       Timestamp.now(),
         status:          'pending',
         read:            false,
@@ -939,6 +953,15 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
   }
 
   const prog = { amount:1, bank:2, review:3, done:4 }[step]
+
+  if (holding.sellAllowed === false) return (
+    <div style={{ textAlign: 'center', padding: '14px 0 6px' }}>
+      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(15,23,32,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}><Icon name="lock" size={28} color={C.muted} /></div>
+      <div style={{ fontSize: 16, fontWeight: 900, color: C.text, marginBottom: 6 }}>Selling not available</div>
+      <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.7, marginBottom: 18 }}>{holding.companyName} is not open for sale right now. Please contact us if you have questions.</div>
+      <Btn label="Close" onClick={onClose} full />
+    </div>
+  )
 
   return (
     <div>
@@ -1024,7 +1047,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
           <Field label="Reason for Selling (optional)" value={reason} onChange={setReason} rows={2} placeholder="e.g. Need liquidity, Portfolio rebalancing…" />
 
           <div style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 10, padding: '10px 13px', marginBottom: 18, fontSize: 11, color: '#f59e0b', lineHeight: 1.7 }}>
-            ⏳ Admin finds a buyer from the network. Payout transferred to your bank after buyer confirmation. Typical time: 7–30 days.
+            ⏳ A sale needs a new buyer at your asking valuation, with no fixed time or guarantee. After the sale is completed, payout reaches your bank within {LEGAL.payoutDays} days.
           </div>
           <Btn label="Continue to Bank Details →" onClick={() => setStep('bank')} full />
         </div>
@@ -1115,14 +1138,33 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
             ))}
           </div>
 
-          <div style={{ background: 'rgba(15,23,32,0.02)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 10, color: C.muted, lineHeight: 1.8 }}>
-            By submitting I confirm: bank details are correct, payout subject to buyer availability (7–30 days), TDS as applicable will be deducted.
+          <div style={{ background: C.goldBg, border: `1px solid ${agree ? C.gold : C.goldBd}`, borderRadius: 12, padding: '14px 14px 12px', marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: C.text, marginBottom: 8 }}>Please read before you submit</div>
+            <ul style={{ paddingLeft: 18, margin: 0 }}>
+              {[
+                'Your stake is sold only when we arrange a new buyer at your asking valuation. There is no guaranteed buyer, price or timeline.',
+                `After the sale is completed, the payout is credited to your bank account within ${LEGAL.payoutDays} days.`,
+                'Payout goes only to the bank account above, which must be in your own name. Taxes such as TDS may be deducted.',
+              ].map(t => <li key={t} style={{ fontSize: 11, color: C.text2, lineHeight: 1.7, marginBottom: 4 }}>{t}</li>)}
+            </ul>
+            <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', marginTop: 12 }}>
+              <input type="checkbox" checked={agree} onChange={e => { setAgree(e.target.checked); setErrors(p => ({ ...p, submit: null })) }}
+                style={{ width: 18, height: 18, marginTop: 1, flexShrink: 0, accentColor: C.gold, cursor: 'pointer' }} />
+              <span style={{ fontSize: 11, color: C.text, lineHeight: 1.65 }}>
+                I have read and agree to the{' '}
+                <button type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); setLegal('terms') }} style={legalLink}>Terms &amp; Conditions</button>
+                {' '}and the{' '}
+                <button type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); setLegal('privacy') }} style={legalLink}>Privacy Policy</button>
+                , and I confirm that the details above are correct.
+              </span>
+            </label>
           </div>
+          <LegalSheet show={!!legal} doc={legal || 'terms'} onClose={() => setLegal(null)} />
 
           {errors.submit && <div style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 8, padding: '8px 12px', color: C.red, fontSize: 11, marginBottom: 12 }}>⚠ {errors.submit}</div>}
           <div style={{ display: 'flex', gap: 10, width: '100%', boxSizing: 'border-box' }}>
             <Btn label="← Edit" onClick={() => setStep('bank')} outline full />
-            <Btn label="Submit Sell Request" onClick={submitSell} loading={loading} danger full />
+            <Btn label="Submit Sell Request" onClick={submitSell} loading={loading} disabled={!agree} danger full />
           </div>
         </div>
       )}
@@ -1137,7 +1179,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
           </div>
           <div style={{ background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 16, marginBottom: 20, textAlign: 'left' }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="clipboard" size={13} color={C.gold} /> What happens next?</div>
-            {[['Admin Reviews', 'Your request is listed in the investor network.'], ['Buyer Matched', 'Typically 7–30 business days.'], ['Payment Cleared', 'Buyer payment received & verified.'], ['Payout to You', 'Transferred to your bank via NEFT/IMPS.']].map(([t,d], i) => (
+            {[['Admin Reviews', 'Your request is listed in the investor network.'], ['Buyer Matched', 'We look for a new buyer at your asking valuation. There is no fixed time.'], ['Sale Completed', 'Buyer payment received and verified, share transfer done.'], ['Payout to You', `Credited to your bank within ${LEGAL.payoutDays} days after the sale is completed.`]].map(([t,d], i) => (
               <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
                 <div style={{ width: 20, height: 20, borderRadius: '50%', background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: '#ffffff', flexShrink: 0 }}>{i+1}</div>
                 <div>
@@ -1265,6 +1307,7 @@ function PortfolioScreen({ user }) {
   const [activeSheet, setActiveSheet] = useState(null)   // 'sell' | 'buyMore'
   const [toast,       setToast]       = useState(null)
   const [allocOpen,   setAllocOpen]   = useState(false)
+  const [legalDoc,    setLegalDoc]    = useState(null)
 
   function load() {
     Promise.all([
@@ -1296,7 +1339,7 @@ function PortfolioScreen({ user }) {
     const sinceLastAmt = (h.stake / 100) * (nowV - prevV)
     const peakDrawPct  = peakV > 0 ? ((nowV - peakV) / peakV * 100) : 0
     const peakDrawAmt  = (h.stake / 100) * (nowV - peakV)
-    return { ...h, curr, buy, g, gp, vp, nowVal: nowV, prevVal: prevV, peakVal: peakV, history, sinceLastPct, sinceLastAmt, peakDrawPct, peakDrawAmt }
+    return { ...h, curr, buy, g, gp, vp, nowVal: nowV, prevVal: prevV, peakVal: peakV, history, sinceLastPct, sinceLastAmt, peakDrawPct, peakDrawAmt, sellAllowed: co?.sellAllowed !== false }
   })
   const totI = enriched.reduce((s, h) => s + h.buy, 0)
   const totC = enriched.reduce((s, h) => s + h.curr, 0)
@@ -1461,12 +1504,21 @@ function PortfolioScreen({ user }) {
                     What would you like to do with <strong style={{ color: C.text }}>{h.companyName}</strong>?
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <button className="tap" onClick={() => setActiveSheet('sell')}
-                      style={{ background: C.redBg, border: `1.5px solid ${C.red}44`, borderRadius: 16, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                      <Icon name="banknote" size={22} color={C.red} />
-                      <div style={{ fontSize: 13, fontWeight: 900, color: C.red }}>Sell Stake</div>
-                      <div style={{ fontSize: 9, color: C.muted, textAlign: 'center', lineHeight: 1.4 }}>List your stake for sale. Payout on buyer match.</div>
-                    </button>
+                    {h.sellAllowed ? (
+                      <button className="tap" onClick={() => setActiveSheet('sell')}
+                        style={{ background: C.redBg, border: `1.5px solid ${C.red}44`, borderRadius: 16, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                        <Icon name="banknote" size={22} color={C.red} />
+                        <div style={{ fontSize: 13, fontWeight: 900, color: C.red }}>Sell Stake</div>
+                        <div style={{ fontSize: 9, color: C.muted, textAlign: 'center', lineHeight: 1.4 }}>Request a sale. Needs a buyer at your asking valuation.</div>
+                      </button>
+                    ) : (
+                      <button className="tap" onClick={() => setLegalDoc('terms')}
+                        style={{ background: 'rgba(15,23,32,0.05)', border: `1.5px solid ${C.border}`, borderRadius: 16, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                        <Icon name="lock" size={22} color={C.muted} />
+                        <div style={{ fontSize: 13, fontWeight: 900, color: C.muted }}>Selling not available</div>
+                        <div style={{ fontSize: 9, color: C.muted, textAlign: 'center', lineHeight: 1.4 }}>Not open for sale right now. Tap to see why.</div>
+                      </button>
+                    )}
                     <button className="tap" onClick={() => setActiveSheet('buyMore')}
                       style={{ background: C.greenBg, border: `1.5px solid ${C.green}44`, borderRadius: 16, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                       <Icon name="trendUp" size={22} color={C.green} />
@@ -1483,6 +1535,7 @@ function PortfolioScreen({ user }) {
 
       {/* Allocation popup (donut chart) */}
       <AllocationSheet show={allocOpen} onClose={() => setAllocOpen(false)} items={allocItems} />
+      <LegalSheet show={!!legalDoc} doc={legalDoc || 'terms'} onClose={() => setLegalDoc(null)} />
 
       {/* Sell Sheet */}
       <Sheet show={activeSheet === 'sell'} onClose={() => setActiveSheet(null)} title={`Sell Stake — ${selH?.companyName || ''}`}>
@@ -1562,6 +1615,7 @@ function ProfileScreen({ user }) {
   const [editing, setEdit]  = useState(false)
   const [saving, setSave]   = useState(false)
   const [toast, setToast]   = useState(null)
+  const [legal, setLegal]   = useState(null)
 
   async function savePan() {
     const v = pan.toUpperCase()
@@ -1643,6 +1697,19 @@ function ProfileScreen({ user }) {
           }
         </Card>
 
+        <Card style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 11, color: C.muted, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Legal</div>
+          {[['terms', 'Terms & Conditions', 'clipboard'], ['privacy', 'Privacy Policy', 'shield']].map(([id, label, icon], i) => (
+            <button key={id} onClick={() => setLegal(id)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', borderTop: i ? `1px solid ${C.border}` : 'none', padding: '13px 0', cursor: 'pointer', fontFamily: 'inherit', color: C.text }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: C.goldBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon name={icon} size={16} color={C.gold} /></div>
+              <span style={{ flex: 1, textAlign: 'left', fontSize: 13, fontWeight: 600 }}>{label}</span>
+              <span style={{ color: C.muted, fontSize: 18, lineHeight: 1 }}>›</span>
+            </button>
+          ))}
+        </Card>
+        <LegalSheet show={!!legal} doc={legal || 'terms'} onClose={() => setLegal(null)} />
+
         <button onClick={() => signOut(auth)}
           style={{ width: '100%', background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 14, padding: 15, color: C.red, fontWeight: 800, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit' }}>
           <Icon name="logout" size={16} /> Sign Out
@@ -1710,6 +1777,10 @@ function AdminCompanies() {
     await updateDoc(doc(db, 'companies', co.id), { active: !co.active }); load()
   }
 
+  async function toggleSell(co) {
+    await updateDoc(doc(db, 'companies', co.id), { sellAllowed: co.sellAllowed === false }); load()
+  }
+
   async function doDelete() {
     await deleteDoc(doc(db, 'companies', confirm.id))
     setToast({ m: 'Deleted' }); setConfirm(null); load()
@@ -1746,6 +1817,7 @@ function AdminCompanies() {
                   <Badge label={co.sector} color={C.blue} />
                   <Badge label={co.risk} color={riskC[co.risk] || C.muted} />
                   <Badge label={co.active ? 'Visible' : 'Hidden'} color={co.active ? C.green : C.muted} />
+                  {co.sellAllowed === false && <Badge label="No selling" color={C.red} />}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 7, marginLeft: 8 }}>
@@ -1778,6 +1850,15 @@ function AdminCompanies() {
                 style={{ background: co.active ? C.redBg : C.greenBg, border: `1px solid ${co.active ? C.red : C.green}44`, borderRadius: 8, padding: '5px 14px', color: co.active ? C.red : C.green, fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: co.active ? C.red : C.green, flexShrink: 0 }} />
                 {co.active ? 'Hide from clients' : 'Show to clients'}
+              </button>
+            </div>
+            {/* Sell allowed toggle */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+              <span style={{ fontSize: 12, color: C.muted }}>Clients can sell this stake</span>
+              <button onClick={() => toggleSell(co)}
+                style={{ background: co.sellAllowed === false ? C.redBg : C.greenBg, border: `1px solid ${co.sellAllowed === false ? C.red : C.green}44`, borderRadius: 8, padding: '5px 14px', color: co.sellAllowed === false ? C.red : C.green, fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: co.sellAllowed === false ? C.red : C.green, flexShrink: 0 }} />
+                {co.sellAllowed === false ? 'Selling blocked · tap to allow' : 'Selling allowed · tap to block'}
               </button>
             </div>
           </Card>
@@ -2037,7 +2118,7 @@ function AdminSellRequests() {
       setConf(null); load()
       const ph = (r.clientPhone || '').replace(/\D/g, '')
       if (ph) {
-        const msg = encodeURIComponent(`Hello ${r.clientName}! ✅ Your sell request for *${r.companyName}* has been approved!\n\nPayout of *${fmt(r.expectedPayout)}* will be transferred to your bank account (${r.bankAccountNo}) within 2–3 business days.\n\n– Anand Finco`)
+        const msg = encodeURIComponent(`Hello ${r.clientName}! ✅ Your sell request for *${r.companyName}* has been approved!\n\nPayout of *${fmt(r.expectedPayout)}* will be transferred to your bank account (${r.bankAccountNo}) within ${LEGAL.payoutDays} days.\n\n– Anand Finco`)
         window.open(`https://wa.me/${ph}?text=${msg}`, '_blank')
       }
     } catch (e) { setToast({ m: e.message, t: 'error' }) }
@@ -2100,6 +2181,11 @@ function AdminSellRequests() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+              {r.termsAccepted && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 700, color: C.green, marginBottom: 12 }}>
+                  <Icon name="checkCircle" size={13} color={C.green} /> Client accepted Terms v{r.termsVersion || '—'}{r.termsAcceptedAt?.toDate ? ` on ${r.termsAcceptedAt.toDate().toLocaleDateString('en-IN')}` : ''}
                 </div>
               )}
               <div style={{ background: C.greenBg, border: `1px solid ${C.green}33`, borderRadius: 10, padding: '10px 12px', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -2395,9 +2481,236 @@ function AdminApp({ user }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// LEGAL — Terms & Conditions and Privacy Policy
+// Edit the details below (all optional). Anything left empty is simply not shown.
+// ─────────────────────────────────────────────────────────────────────────────
+const LEGAL = {
+  company:          'Anand Finco',
+  version:          '1.0',                 // change when you change the wording below
+  updated:          '12 November 2026',
+  payoutDays:       '15–30',               // payout after a sale is completed
+  email:            '',                    // e.g. 'support@anandfinco.in'
+  phone:            '',                    // e.g. '+91 98765 43210'
+  address:          '',                    // registered office address
+  grievanceOfficer: '',                    // name of grievance officer
+  jurisdiction:     '',                    // city whose courts apply, e.g. 'Mumbai'
+}
+
+const LEGAL_DOCS = {
+  terms: {
+    title: 'Terms & Conditions',
+    intro: `These Terms & Conditions ("Terms") apply when you use the ${LEGAL.company} app and submit buy or sell requests through it. Please read them carefully. By using the app, or by ticking the acceptance box before submitting a sell request, you agree to these Terms and to our Privacy Policy.`,
+    sections: [
+      { h: '1. About the app',
+        p: [`${LEGAL.company} ("we", "us") helps its clients view their unlisted-share holdings and request to buy more or to sell. The app is a convenience tool. Submitting a request in the app does not by itself buy or sell any shares.`] },
+      { h: '2. Your account',
+        ul: ['You must be at least 18 years old and legally able to enter into a contract.',
+             'Your account is created by us for you. Keep your username and password private and do not share them with anyone.',
+             'You are responsible for everything done through your account. Tell us immediately if you think someone else has used it.',
+             `We will never ask you for your password or any OTP. Do not share them with anyone, including people who say they are from ${LEGAL.company}.`] },
+      { h: '3. Risks of unlisted shares',
+        p: ['Unlisted shares are not traded on a stock exchange. Please understand the following before you invest or sell:'],
+        ul: ['There may be no ready buyer, so you may not be able to sell when you want, or at all.',
+             'The value of your investment can go down, and you can lose part or all of your money.',
+             'Valuations shown in the app are indicative. They are updated by us from time to time and are not a price at which a sale is guaranteed.',
+             'Gains, losses and returns shown are on paper only. They become real only when a sale is completed and the money is received.',
+             'Past performance does not guarantee future results.'] },
+      { h: '4. Selling your stake',
+        p: ['Selling unlisted shares works differently from selling shares on an exchange. By submitting a sell request you accept the following:'],
+        ul: ['**Some companies cannot be sold.** For certain companies the sell option is not available, for example because of a lock-in period, a transfer restriction or the company\'s own policy. For these companies the app shows "Selling not available". We may change this as conditions change.',
+             '**A sell request is not a sale.** It is a request asking us to find a buyer for your stake.',
+             '**A new buyer is needed.** Your stake is sold only when we arrange a new buyer who agrees to buy at your asking valuation. We do not guarantee that a buyer will be found, how long it will take, or the price. Until a sale is completed, you continue to hold the shares and they stay in your portfolio.',
+             '**Your asking valuation matters.** If your asking valuation is higher than what buyers are willing to pay, your request may take longer or may not be fulfilled. To change or withdraw a request, contact us before a buyer is matched.',
+             '**When is a sale completed?** A sale is completed when the buyer\'s payment has been received and verified by us and the share transfer formalities, including any approvals the company requires, are done. Only then is your portfolio updated.',
+             `**Payout timeline.** After the sale is completed, the sale proceeds are credited to your bank account within ${LEGAL.payoutDays} days.`,
+             '**Your bank account.** Payout is made only to the bank account you provided in the request, and it must be in your own name. We do not pay third-party accounts.',
+             '**Deductions.** Taxes, including TDS where applicable, and any charges required by law may be deducted. The "Expected Payout" shown in the app is only an estimate.',
+             '**We may decline or cancel a request** if, for example, your details do not match our records, a verification is pending, the company or a regulator does not permit the transfer, or we suspect misuse or fraud.'] },
+      { h: '5. What you confirm when you sell',
+        p: ['When you tick the box and submit a sell request, you confirm that:'],
+        ul: ['You are the lawful owner of the stake and it is free from any pledge, loan or other claim.',
+             'The details and bank information you gave are true and correct.',
+             'You have read these Terms and understand that there is no guaranteed buyer, price or timeline.',
+             `You understand that payout is credited within ${LEGAL.payoutDays} days after the sale is completed.`] },
+      { h: '6. Buying more',
+        p: ['A "Buy More" request only tells us that you are interested. It is not a confirmed purchase. Availability, price, company approvals and verification checks apply, and a purchase is confirmed only when our team confirms it to you. Make payments only as instructed by our team through our official contact details.'] },
+      { h: '7. Your bank details',
+        ul: ['Check your bank details carefully. Wrong details can delay or misdirect your payout, and we are not responsible for delay or loss caused by incorrect details you provide.',
+             'For your safety, the app stores only the last 4 digits of your account number. Our team may contact you through a secure channel to confirm the full details before paying out.'] },
+      { h: '8. Fees',
+        p: ['If any fee or charge applies to a transaction, we will tell you before you confirm it.'] },
+      { h: '9. Using the app',
+        ul: ['Use the app only for lawful purposes. Do not try to break its security, copy its data or misuse another person\'s account.',
+             'We try to keep the app available and accurate, but it is provided "as is". There may be delays, errors or interruptions. If the app and our official records or documents differ, the official records and documents prevail.',
+             'We may suspend or close an account that is misused.'] },
+      { h: '10. Limits on our responsibility',
+        p: ['To the extent the law permits, we are not responsible for losses caused by market conditions, the lack of a buyer, delays by companies, banks, buyers or regulators, interruptions of the app or events outside our control, or for indirect or consequential losses. Nothing in these Terms limits any right you have under law that cannot be excluded.'] },
+      { h: '11. Privacy',
+        p: ['How we collect and use your information is explained in our Privacy Policy, which forms part of these Terms.'] },
+      { h: '12. Changes to these Terms',
+        p: ['We may update these Terms from time to time. The version and date are shown at the end of this page. When you submit a sell request, we record the version you accepted, and that version applies to that request.'] },
+      { h: '13. Governing law and complaints',
+        p: [`These Terms are governed by the laws of India. ${LEGAL.jurisdiction ? `Courts at ${LEGAL.jurisdiction} have jurisdiction` : 'Courts of competent jurisdiction in India have jurisdiction'}, subject to any rights you have under law.`,
+            'If you have a complaint, please contact us first using the details below and we will try to resolve it promptly.'] },
+    ],
+  },
+
+  privacy: {
+    title: 'Privacy Policy',
+    intro: `This Privacy Policy explains what personal information ${LEGAL.company} collects through the app, why we collect it, how we protect it and what choices you have. By using the app you agree to this Policy.`,
+    sections: [
+      { h: '1. Information we collect',
+        ul: ['**Account details:** your name, username or email, phone number, city and the date you joined.',
+             '**Identity details:** your PAN, if you choose to add it in your profile.',
+             '**Portfolio details:** the companies you hold, your stake, amount invested and valuations.',
+             '**Requests:** the buy and sell requests you submit, including your asking valuation and the reason you give.',
+             '**Payout bank details:** account holder name, bank name, IFSC code, account type and only the last 4 digits of your account number.',
+             '**Acceptance records:** the version of the Terms you accepted and when.',
+             '**Technical information:** basic device, browser and connection details handled by our hosting and database providers to run the service securely, and login information kept in your browser so that you stay signed in.'] },
+      { h: '2. How we use your information',
+        ul: ['To run your account and show your portfolio.',
+             'To handle your buy and sell requests and to pay out sale proceeds.',
+             'To verify your identity and details and to prevent fraud.',
+             'To contact you about your account, your requests and important updates, including by phone and WhatsApp.',
+             'To meet legal, tax, accounting and regulatory requirements.',
+             'To keep the app secure and to fix problems.'],
+        p: ['We do not sell your personal information and we do not show advertisements in the app.'] },
+      { h: '3. Who we share it with',
+        p: ['We share information only when it is needed:'],
+        ul: ['**Service providers** that run the app for us: Google Firebase (login and database) and Vercel (hosting).',
+             '**Parties to a sale,** such as the buyer, the company or its registrar, and banks or payment partners, limited to what is needed to complete your sale and payout.',
+             '**Authorities,** when the law requires it.',
+             '**WhatsApp:** when you submit a request or tap a WhatsApp button, a message with details of your request may open in WhatsApp for you to send. Messages you send there are covered by WhatsApp\'s own policies.'] },
+      { h: '4. Third-party content',
+        p: ['The news section is loaded through our server from a news provider and does not send your personal details. Fonts are loaded from Google Fonts, which may receive your IP address.'] },
+      { h: '5. Where your data is stored and how we protect it',
+        ul: ['Your data is stored with Google Firebase, on servers operated by Google, which may be located outside India.',
+             'Connections to the app are encrypted (HTTPS).',
+             `Access rules mean each client can see only their own information, and only authorised ${LEGAL.company} staff can manage client data.`,
+             'We store only the last 4 digits of your bank account number.',
+             'No system is completely secure. Please protect your password and tell us if you notice anything suspicious.'] },
+      { h: '6. How long we keep it',
+        p: ['We keep your information while your account is active, and afterwards for as long as needed to provide our services and to meet legal, tax, accounting and regulatory requirements. After that we delete or anonymise it.'] },
+      { h: '7. Your rights and choices',
+        p: ['You can ask us to:'],
+        ul: ['show you the information we hold about you;',
+             'correct or update it;',
+             'delete it (we may need to keep some records because the law requires it);',
+             'stop using it by withdrawing your consent (this may mean we can no longer provide some services); and',
+             'nominate another person to exercise your rights if you are unable to.'] },
+      { h: '8. Children',
+        p: ['The app is meant for adults aged 18 and above. It is not meant for children.'] },
+      { h: '9. Changes to this Policy',
+        p: ['We may update this Policy from time to time. The version and date are shown at the end of this page.'] },
+    ],
+  },
+}
+
+// tiny helper: turns **bold** markers into <strong>
+function Rich({ text }) {
+  return <>{String(text).split('**').map((t, i) => (i % 2 ? <strong key={i} style={{ color: C.text }}>{t}</strong> : <span key={i}>{t}</span>))}</>
+}
+
+function LegalBody({ doc }) {
+  const d = LEGAL_DOCS[doc] || LEGAL_DOCS.terms
+  const contact = [['Company', LEGAL.company], ['Email', LEGAL.email], ['Phone', LEGAL.phone], ['Address', LEGAL.address], ['Grievance officer', LEGAL.grievanceOfficer]].filter(([, v]) => v)
+  const para = { fontSize: 12.5, color: C.text2, lineHeight: 1.75, marginBottom: 8 }
+  return (
+    <div>
+      <div style={{ fontSize: 20, fontWeight: 900, color: C.text, marginBottom: 8 }}>{d.title}</div>
+      <div style={{ ...para, marginBottom: 14 }}>{d.intro}</div>
+      {d.sections.map(s => (
+        <div key={s.h} style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 6 }}>{s.h}</div>
+          {(s.p || []).map((t, i) => <div key={'p' + i} style={para}><Rich text={t} /></div>)}
+          {s.ul && (
+            <ul style={{ paddingLeft: 18, margin: '0 0 4px' }}>
+              {s.ul.map((t, i) => <li key={i} style={{ ...para, marginBottom: 6 }}><Rich text={t} /></li>)}
+            </ul>
+          )}
+        </div>
+      ))}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 6 }}>Contact us</div>
+        {contact.map(([l, v]) => (
+          <div key={l} style={{ ...para, marginBottom: 4 }}><strong style={{ color: C.text }}>{l}:</strong> {v}</div>
+        ))}
+        <div style={{ ...para, marginTop: 6 }}>You can also reach us on the phone or WhatsApp number shared with you by our team.</div>
+      </div>
+      <div style={{ fontSize: 10, color: C.muted, borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+        Version {LEGAL.version} · Last updated {LEGAL.updated}
+      </div>
+    </div>
+  )
+}
+
+// Pop-up reader used inside the app (login, profile, sell flow, portfolio)
+function LegalSheet({ show, doc, onClose }) {
+  const [tab, setTab] = useState(doc || 'terms')
+  useEffect(() => { if (show) setTab(doc || 'terms') }, [show, doc])
+  useEffect(() => {
+    if (!show) return
+    const onKey = e => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [show])
+  if (!show) return null
+  return (
+    <div onClick={onClose} role="presentation"
+      style={{ position: 'fixed', inset: 0, background: 'rgba(8,20,16,0.6)', zIndex: 400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div role="dialog" aria-modal="true" aria-label="Legal" onClick={e => e.stopPropagation()}
+        style={{ width: '100%', maxWidth: 430, height: '90dvh', background: C.bg2, borderTopLeftRadius: 24, borderTopRightRadius: 24, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 -8px 40px rgba(15,23,32,0.2)' }}>
+        <div style={{ padding: '14px 18px 10px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ display: 'flex', gap: 4, background: C.bg3, borderRadius: 12, padding: 3 }}>
+              {[['terms', 'Terms & Conditions'], ['privacy', 'Privacy Policy']].map(([id, label]) => (
+                <button key={id} onClick={() => setTab(id)} aria-pressed={tab === id}
+                  style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit', borderRadius: 9, padding: '7px 12px', fontSize: 11, fontWeight: 800,
+                    background: tab === id ? `linear-gradient(135deg,${C.gold},${C.goldL})` : 'transparent', color: tab === id ? '#ffffff' : C.muted }}>{label}</button>
+              ))}
+            </div>
+            <button onClick={onClose} aria-label="Close legal"
+              style={{ background: 'rgba(15,23,32,0.07)', border: 'none', borderRadius: 8, width: 30, height: 30, color: C.muted, fontSize: 17, cursor: 'pointer', fontFamily: 'inherit' }}>×</button>
+          </div>
+        </div>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain', padding: '4px 20px 28px' }}>
+          <LegalBody doc={tab} />
+          <div style={{ marginTop: 18 }}><Btn label="Close" onClick={onClose} full /></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Full public page at /terms and /privacy (no login needed) – also usable as the
+// privacy-policy link that Google Play asks for.
+function LegalPage({ doc }) {
+  const link = (id, label) => (
+    <a key={id} href={'/' + id} style={{ textDecoration: 'none', borderRadius: 9, padding: '7px 12px', fontSize: 11, fontWeight: 800,
+      background: doc === id ? `linear-gradient(135deg,${C.gold},${C.goldL})` : 'transparent', color: doc === id ? '#ffffff' : C.muted }}>{label}</a>
+  )
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: C.bg2 }}>
+      <div style={{ padding: '22px 18px 12px', flexShrink: 0, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 18, fontWeight: 800, color: '#0a7a52' }}>{LEGAL.company}</div>
+          <a href="/" style={{ fontSize: 11, fontWeight: 800, color: C.gold, textDecoration: 'none' }}>← Back to app</a>
+        </div>
+        <div style={{ display: 'flex', gap: 4, background: C.bg3, borderRadius: 12, padding: 3, marginTop: 12, width: 'fit-content' }}>
+          {link('terms', 'Terms & Conditions')}{link('privacy', 'Privacy Policy')}
+        </div>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px 40px' }}>
+        <LegalBody doc={doc} />
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ROOT
 // ─────────────────────────────────────────────────────────────────────────────
-export default function App() {
+function AppMain() {
   const [user,    setUser]    = useState(undefined) // undefined = loading
   const [profile, setProfile] = useState(null)
 
@@ -2435,4 +2748,18 @@ export default function App() {
       </Shell>
     </>
   )
+}
+
+// Public legal pages (/terms and /privacy) work without logging in; everything else is the normal app.
+export default function App() {
+  const path = typeof window !== 'undefined' ? window.location.pathname.replace(/\/+$/, '').toLowerCase() : ''
+  if (path === '/terms' || path === '/privacy') {
+    return (
+      <>
+        <InjectCSS />
+        <Shell><LegalPage doc={path === '/terms' ? 'terms' : 'privacy'} /></Shell>
+      </>
+    )
+  }
+  return <AppMain />
 }
