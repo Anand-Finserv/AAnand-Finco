@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-  <meta name="theme-color" content="#ffffff"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"/>
+  <meta name="theme-color" content="#121c18" media="(prefers-color-scheme: dark)"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
@@ -17,6 +19,7 @@
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html,body,#root{height:100%;width:100%;overflow:hidden}
     body{background:#f6f8f7;font-family:'Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+    @media (prefers-color-scheme:dark){html,body{background:#0b1210}}
     ::-webkit-scrollbar{width:0;height:0}
     input,select,textarea,button{font-family:inherit}
     input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}

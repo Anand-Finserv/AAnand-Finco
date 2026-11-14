@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"/>
+  <meta name="theme-color" content="#121c18" media="(prefers-color-scheme: dark)"/>
+  <title>Anand Finco – Offline</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+      background:#f6f8f7;color:#0f1512;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;text-align:center}
+    .card{width:100%;max-width:360px;background:#fff;border:1px solid rgba(15,23,32,.09);border-radius:22px;
+      padding:32px 24px;box-shadow:0 8px 32px rgba(15,23,32,.08)}
+    .logo{width:64px;height:64px;border-radius:18px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg,#00d09c,#009670);color:#fff;font-size:30px;font-weight:800}
+    h1{font-size:20px;margin-bottom:8px}
+    p{font-size:14px;color:#6b7670;line-height:1.6;margin-bottom:22px}
+    button{width:100%;border:0;border-radius:12px;padding:14px;background:#00b386;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+    @media (prefers-color-scheme:dark){body{background:#0b1210;color:#e9f2ee}.card{background:#141f1b;border-color:rgba(255,255,255,.10);box-shadow:none}p{color:#8fa198}}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">₹</div>
+    <h1>You're offline</h1>
+    <p>Anand Finco needs an internet connection to show your live portfolio. Please check your connection and try again.</p>
+    <button onclick="location.reload()">Try again</button>
+  </div>
+</body>
+</html>
