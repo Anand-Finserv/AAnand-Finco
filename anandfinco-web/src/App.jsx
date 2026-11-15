@@ -21,10 +21,10 @@ const ADMIN_EMAIL = 'admin@anandfinco.com'
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
-  bg:'#f6f8f7', bg2:'#ffffff', bg3:'#eef5f1',
+  bg:'var(--bg)', bg2:'var(--bg2)', bg3:'var(--bg3)',
   gold:'#00b386', goldL:'#00d09c', goldBg:'rgba(0,179,134,0.08)', goldBd:'rgba(0,179,134,0.24)',
-  text:'#0f1512', text2:'#3d4a45', muted:'#6b7670', dim:'#aab4ae',
-  card:'#ffffff', border:'rgba(15,23,32,0.09)',
+  text:'var(--text)', text2:'var(--text2)', muted:'var(--muted)', dim:'var(--dim)',
+  card:'var(--card)', border:'var(--border)',
   green:'#16a34a', greenBg:'rgba(22,163,74,0.09)', greenBd:'rgba(22,163,74,0.26)',
   red:'#e11d48',   redBg:'rgba(225,29,72,0.08)',    redBd:'rgba(225,29,72,0.24)',
   blue:'#2563eb',
@@ -34,8 +34,10 @@ const C = {
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{color-scheme:light dark;--bg:#f6f8f7;--bg2:#ffffff;--bg3:#eef5f1;--surface:#ffffff;--card:#ffffff;--text:#0f1512;--text2:#3d4a45;--muted:#6b7670;--dim:#aab4ae;--border:rgba(15,23,32,0.09);--tint:15,23,32;--shade:15,23,32;--label:#5b665f;--brandText:#0a7a52;--code:#0a6b4a;--shim:#0f7a5c;--mintA:#eafaf3;--mintB:#e6f7f0;--mintC:#dff7ec;--pg1:#e1f5ec;--pg2:#f4f8f6;--pg3:#e3edfb;--sg1:#d2f3e5;--sg2:#eaf7f2;--sg3:#dbe9fd;--letterbox:#e7edea;--glass-bg:rgba(255,255,255,.58);--glass-bd:rgba(255,255,255,.78);--glass-soft-bg:rgba(255,255,255,.52);--glass-soft-bd:rgba(255,255,255,.72);--glass-shadow:0 8px 30px rgba(15,23,32,.08);--hi:rgba(255,255,255,.9);--glass-bd2:rgba(255,255,255,.7);--glass-open:rgba(255,255,255,.74);--glass-panel:rgba(255,255,255,.7);--shine:rgba(255,255,255,.6);--glass-fallback:rgba(255,255,255,.94)}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1210;--bg2:#121c18;--bg3:#1a2923;--surface:#141f1b;--card:#16231e;--text:#e9f2ee;--text2:#b9c9c1;--muted:#8fa198;--dim:#66776f;--border:rgba(255,255,255,0.10);--tint:255,255,255;--shade:0,0,0;--label:#9db0a7;--brandText:#3fe0a8;--code:#7fe6c0;--shim:#34d9a5;--mintA:#10241d;--mintB:#12291f;--mintC:#163026;--pg1:#0d1f18;--pg2:#0b1210;--pg3:#0c1626;--sg1:#11291f;--sg2:#0f1c17;--sg3:#0d1829;--letterbox:#050807;--glass-bg:rgba(255,255,255,.06);--glass-bd:rgba(255,255,255,.12);--glass-soft-bg:rgba(255,255,255,.07);--glass-soft-bd:rgba(255,255,255,.12);--glass-shadow:0 8px 30px rgba(0,0,0,.35);--hi:rgba(255,255,255,.10);--glass-bd2:rgba(255,255,255,.10);--glass-open:rgba(255,255,255,.10);--glass-panel:rgba(255,255,255,.08);--shine:rgba(255,255,255,.08);--glass-fallback:#16231e}}
 body{font-family:'DM Sans',sans-serif;background:${C.bg};color:${C.text};height:100dvh;overflow:hidden}
-#root{height:100dvh;display:flex;flex-direction:column;align-items:center;background:#e7edea}
+#root{height:100dvh;display:flex;flex-direction:column;align-items:center;background:var(--letterbox)}
 input::placeholder,textarea::placeholder{color:${C.dim}}
 input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 select option{background:${C.bg2}}
@@ -53,15 +55,15 @@ select option{background:${C.bg2}}
 .orb2{animation:floatOrb2 9s ease-in-out infinite}
 .logoAnim{animation:logoIn .9s cubic-bezier(.34,1.56,.64,1) both, glowPulse 3.2s ease-in-out infinite .9s}
 .cardAnim{animation:cardIn .6s cubic-bezier(.22,1,.36,1) .15s both}
-.shimmerText{background:linear-gradient(90deg,#0f7a5c 0%,#00d09c 25%,#0f7a5c 50%,#00b386 75%,#0f7a5c 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmerSweep 4s linear infinite}
+.shimmerText{background:linear-gradient(90deg,var(--shim) 0%,#00d09c 25%,var(--shim) 50%,#00b386 75%,var(--shim) 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmerSweep 4s linear infinite}
 @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 @keyframes bounceIn{0%{opacity:0;transform:translateY(26px) scale(.93)}55%{opacity:1;transform:translateY(-7px) scale(1.012)}78%{transform:translateY(2px) scale(.997)}100%{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes panelIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes orbDrift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,-22px) scale(1.08)}}
 @keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-.glass{background:rgba(255,255,255,.58);-webkit-backdrop-filter:blur(14px) saturate(165%);backdrop-filter:blur(14px) saturate(165%);border:1px solid rgba(255,255,255,.78);box-shadow:0 8px 30px rgba(15,23,32,.08),inset 0 1px 0 rgba(255,255,255,.9)}
-.glassSoft{background:rgba(255,255,255,.52);border:1px solid rgba(255,255,255,.72)}
+.glass{background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(165%);backdrop-filter:blur(14px) saturate(165%);border:1px solid var(--glass-bd);box-shadow:var(--glass-shadow),inset 0 1px 0 var(--hi)}
+.glassSoft{background:var(--glass-soft-bg);border:1px solid var(--glass-soft-bd)}
 .bounceIn{animation:bounceIn .75s cubic-bezier(.34,1.56,.64,1) backwards}
 .bounceFloat{animation:bounceIn .75s cubic-bezier(.34,1.56,.64,1) backwards,floatY 5.5s ease-in-out .8s infinite}
 .pressable{transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
@@ -72,7 +74,7 @@ select option{background:${C.bg2}}
 .panelIn{animation:panelIn .28s ease backwards}
 .orbDrift{animation:orbDrift 9s ease-in-out infinite}
 .growX{transform-origin:left center;animation:growX .9s cubic-bezier(.22,1,.36,1) .25s backwards}
-@supports not (-webkit-backdrop-filter:blur(1px)){@supports not (backdrop-filter:blur(1px)){.glass{background:rgba(255,255,255,.94)}}}
+@supports not (-webkit-backdrop-filter:blur(1px)){@supports not (backdrop-filter:blur(1px)){.glass{background:var(--glass-fallback)}}}
 @media (prefers-reduced-motion:reduce){.bounceIn,.bounceFloat,.sheetUp,.panelIn,.orbDrift,.growX,.orb1,.orb2{animation:none!important}}
 `
 function InjectCSS() {
@@ -139,8 +141,8 @@ function Icon({ name, size = 18, color = 'currentColor', sw = 2, style }) {
   const p = ICONS[name]
   if (!p) return null
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
-      strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, display: 'block', ...style }}>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: color, flexShrink: 0, display: 'block', ...style }}>
       {p}
     </svg>
   )
@@ -170,13 +172,13 @@ function Btn({ label, onClick, color, outline, danger, full, sm, disabled, loadi
 
 function Field({ label, value, onChange, type = 'text', placeholder, note, rows, options }) {
   const base = {
-    width: '100%', background: 'rgba(15,23,32,0.06)', border: '1px solid rgba(15,23,32,0.12)',
+    width: '100%', background: 'rgba(var(--tint),0.06)', border: '1px solid rgba(var(--tint),0.12)',
     borderRadius: 10, padding: '10px 13px', color: C.text, fontSize: 14,
     outline: 'none', fontFamily: 'inherit',
   }
   return (
     <div style={{ marginBottom: 14 }}>
-      {label && <div style={{ fontSize: 10, color: '#5b665f', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>}
+      {label && <div style={{ fontSize: 10, color: 'var(--label)', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>}
       {options
         ? <select value={value} onChange={e => onChange(e.target.value)} style={base}>
             {options.map(o => <option key={o} value={o}>{o}</option>)}
@@ -227,10 +229,10 @@ function Sheet({ show, onClose, title, children }) {
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <div onClick={e => e.stopPropagation()}
-        style={{ width: '100%', maxWidth: 430, background: '#ffffff', borderTopLeftRadius: 24, borderTopRightRadius: 24, border: '1px solid rgba(15,23,32,0.08)', maxHeight: '90dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 -8px 40px rgba(15,23,32,0.15)' }}>
+        style={{ width: '100%', maxWidth: 430, background: 'var(--surface)', borderTopLeftRadius: 24, borderTopRightRadius: 24, border: '1px solid rgba(var(--tint),0.08)', maxHeight: '90dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 -8px 40px rgba(var(--shade),0.15)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 20px 14px', flexShrink: 0 }}>
           <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>{title}</div>
-          <button onClick={onClose} style={{ background: 'rgba(15,23,32,0.07)', border: 'none', borderRadius: 8, width: 30, height: 30, color: C.muted, fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>×</button>
+          <button onClick={onClose} style={{ background: 'rgba(var(--tint),0.07)', border: 'none', borderRadius: 8, width: 30, height: 30, color: C.muted, fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>×</button>
         </div>
         <div style={{ overflowY: 'auto', overflowX: 'hidden', padding: '0 20px 24px', width: '100%', boxSizing: 'border-box' }}>{children}</div>
       </div>
@@ -312,7 +314,7 @@ function ValueRangeBar({ entry, current, peak }) {
   const isUp = current >= entry
   const showPeak = peak > entry + entry * 0.001 && Math.abs(peak - current) > peak * 0.001
   return (
-    <div style={{ position: 'relative', height: 6, background: 'rgba(15,23,32,0.08)', borderRadius: 99, margin: '20px 4px 26px' }}>
+    <div style={{ position: 'relative', height: 6, background: 'rgba(var(--tint),0.08)', borderRadius: 99, margin: '20px 4px 26px' }}>
       <div style={{ position: 'absolute', left: `${Math.min(pE, pC)}%`, width: `${Math.abs(pC - pE)}%`, height: '100%', background: isUp ? C.green : C.red, opacity: 0.45, borderRadius: 99 }} />
       <div style={{ position: 'absolute', left: `${pE}%`, top: -15, transform: 'translateX(-50%)', fontSize: 8, color: C.muted, whiteSpace: 'nowrap' }}>Entry</div>
       <div style={{ position: 'absolute', left: `${pE}%`, top: 0, width: 2, height: 6, background: C.muted, transform: 'translateX(-50%)' }} />
@@ -320,7 +322,7 @@ function ValueRangeBar({ entry, current, peak }) {
         <div style={{ position: 'absolute', left: `${pP}%`, top: -15, transform: 'translateX(-50%)', fontSize: 8, color: C.gold, whiteSpace: 'nowrap' }}>Peak</div>
         <div style={{ position: 'absolute', left: `${pP}%`, top: -3, width: 2, height: 12, background: C.gold, transform: 'translateX(-50%)' }} />
       </>}
-      <div style={{ position: 'absolute', left: `${pC}%`, top: '50%', width: 13, height: 13, borderRadius: '50%', background: isUp ? C.green : C.red, border: '2px solid #ffffff', transform: 'translate(-50%,-50%)', boxShadow: `0 0 10px ${isUp ? C.green : C.red}99` }} />
+      <div style={{ position: 'absolute', left: `${pC}%`, top: '50%', width: 13, height: 13, borderRadius: '50%', background: isUp ? C.green : C.red, border: '2px solid var(--surface)', transform: 'translate(-50%,-50%)', boxShadow: `0 0 10px ${isUp ? C.green : C.red}99` }} />
     </div>
   )
 }
@@ -433,7 +435,7 @@ function AllocationSheet({ show, onClose, items }) {
 
   const stats = [
     ['Total Invested', fmt(totI),                        C.text,  'wallet',    C.blue],
-    ['Current Value',  fmt(totC),                        '#0a7a52', 'portfolio', C.gold],
+    ['Current Value',  fmt(totC),                        'var(--brandText)', 'portfolio', C.gold],
     ['Total Gain / Loss', (totG >= 0 ? '+' : '') + fmt(totG), gc(totG), totG >= 0 ? 'trendUp' : 'trendDown', gc(totG)],
     ['Overall Return', pct(totP),                        gc(totP), 'award',     gc(totP)],
   ]
@@ -444,7 +446,7 @@ function AllocationSheet({ show, onClose, items }) {
       <div role="dialog" aria-modal="true" aria-label="Portfolio overview" onClick={e => e.stopPropagation()} className="sheetUp"
         style={{ position: 'relative', width: '100%', maxWidth: 430, maxHeight: '92dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
           borderTopLeftRadius: 28, borderTopRightRadius: 28, boxShadow: '0 -10px 50px rgba(0,0,0,0.25)',
-          background: 'linear-gradient(165deg,#d2f3e5 0%,#eaf7f2 40%,#dbe9fd 100%)' }}>
+          background: 'linear-gradient(165deg,var(--sg1) 0%,var(--sg2) 40%,var(--sg3) 100%)' }}>
 
         {/* floating colour orbs (give the glass something to blur) */}
         <div className="orbDrift" style={{ position: 'absolute', top: -50, left: -60, width: 230, height: 230, borderRadius: '50%', background: 'radial-gradient(circle,rgba(0,179,134,.5) 0%,transparent 68%)', filter: 'blur(28px)', pointerEvents: 'none' }} />
@@ -453,7 +455,7 @@ function AllocationSheet({ show, onClose, items }) {
 
         {/* header */}
         <div style={{ position: 'relative', zIndex: 2, padding: '10px 20px 8px', flexShrink: 0 }}>
-          <div style={{ width: 42, height: 4, borderRadius: 99, background: 'rgba(15,23,32,0.18)', margin: '0 auto 12px' }} />
+          <div style={{ width: 42, height: 4, borderRadius: 99, background: 'rgba(var(--tint),0.18)', margin: '0 auto 12px' }} />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ fontSize: 18, fontWeight: 900, color: C.text }}>Portfolio Overview</div>
@@ -507,7 +509,7 @@ function AllocationSheet({ show, onClose, items }) {
                 ) : (
                   <div style={{ position: 'relative', width: 230, height: 230, margin: '4px auto 0' }}>
                     <svg viewBox="0 0 200 200" width="230" height="230" role="img" aria-label="Portfolio allocation donut chart" style={{ display: 'block' }}>
-                      <circle cx="100" cy="100" r={R} fill="none" stroke="rgba(15,23,32,0.06)" strokeWidth={SW} />
+                      <circle cx="100" cy="100" r={R} fill="none" style={{ stroke: 'rgba(var(--tint),0.06)' }} strokeWidth={SW} />
                       {segs.map((s, i) => {
                         const isAct = act === i
                         return (
@@ -527,7 +529,7 @@ function AllocationSheet({ show, onClose, items }) {
                         <div style={{ fontSize: 11, fontWeight: 800, color: C.text }}>{fmtL(val(actItem))}</div>
                       </>) : (<>
                         <div style={{ fontSize: 10, color: C.muted }}>{mode === 'current' ? 'Total Value' : 'Total Invested'}</div>
-                        <div style={{ fontSize: 19, fontWeight: 900, color: '#0a7a52', lineHeight: 1.25 }}>{fmtL(total)}</div>
+                        <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--brandText)', lineHeight: 1.25 }}>{fmtL(total)}</div>
                         <div style={{ fontSize: 10, color: C.muted }}>100%</div>
                       </>)}
                     </div>
@@ -548,7 +550,7 @@ function AllocationSheet({ show, onClose, items }) {
               return (
                 <button key={x.key} className="glassSoft bounceIn tap" onClick={() => setActive(a => (a === x.key ? null : x.key))}
                   style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, borderRadius: 18, padding: '12px 14px', marginBottom: 10,
-                    cursor: 'pointer', fontFamily: 'inherit', color: 'inherit', boxShadow: '0 6px 20px rgba(15,23,32,0.06)', border: isAct ? `1.5px solid ${color}` : undefined, ...stagger(i, 0.35) }}>
+                    cursor: 'pointer', fontFamily: 'inherit', color: 'inherit', boxShadow: '0 6px 20px rgba(var(--shade),0.06)', border: isAct ? `1.5px solid ${color}` : undefined, ...stagger(i, 0.35) }}>
                   <div style={{ width: 12, height: 12, borderRadius: 4, background: color, flexShrink: 0, boxShadow: `0 0 10px ${color}77` }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.name}</div>
@@ -578,7 +580,7 @@ function AllocationSheet({ show, onClose, items }) {
 // ── Bottom Nav ────────────────────────────────────────────────────────────────
 function BottomNav({ tabs, active, onChange }) {
   return (
-    <div style={{ height: 64, background: '#ffffff', borderTop: `1px solid ${C.border}`, display: 'flex', flexShrink: 0, position: 'relative', zIndex: 10, boxShadow: '0 -2px 12px rgba(15,23,32,0.05)' }}>
+    <div style={{ height: 64, background: 'var(--surface)', borderTop: `1px solid ${C.border}`, display: 'flex', flexShrink: 0, position: 'relative', zIndex: 10, boxShadow: '0 -2px 12px rgba(var(--shade),0.05)' }}>
       {tabs.map(t => {
         const on = active === t.id
         return (
@@ -640,19 +642,19 @@ function LoginScreen() {
         </div>
 
         {/* Card */}
-        <div className="cardAnim" style={{ background: '#ffffff', border: `1px solid ${C.border}`, borderRadius: 22, padding: 24, boxShadow: '0 8px 32px rgba(15,23,32,0.08)' }}>
+        <div className="cardAnim" style={{ background: 'var(--surface)', border: `1px solid ${C.border}`, borderRadius: 22, padding: 24, boxShadow: '0 8px 32px rgba(var(--shade),0.08)' }}>
           <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 4 }}>Welcome Back</div>
           <div style={{ fontSize: 12, color: C.muted, marginBottom: 22 }}>Sign in to your investment account</div>
 
           <div className="staggerIn">
             <Field label="Username" value={un} onChange={setUn} placeholder="e.g. rahul.sharma" />
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10, color: '#5b665f', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 6 }}>Password</div>
+              <div style={{ fontSize: 10, color: 'var(--label)', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 6 }}>Password</div>
               <div style={{ position: 'relative' }}>
                 <input value={pw} onChange={e => setPw(e.target.value)} type={showPw ? 'text' : 'password'}
                   placeholder="Enter password"
                   onKeyDown={e => e.key === 'Enter' && login()}
-                  style={{ width: '100%', background: 'rgba(15,23,32,0.06)', border: '1px solid rgba(15,23,32,0.12)', borderRadius: 10, padding: '10px 44px 10px 13px', color: C.text, fontSize: 14, outline: 'none', fontFamily: 'inherit' }} />
+                  style={{ width: '100%', background: 'rgba(var(--tint),0.06)', border: '1px solid rgba(var(--tint),0.12)', borderRadius: 10, padding: '10px 44px 10px 13px', color: C.text, fontSize: 14, outline: 'none', fontFamily: 'inherit' }} />
                 <button onClick={() => setShowPw(!showPw)}
                   style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 16 }}>
                   <Icon name={showPw ? 'eyeOff' : 'eye'} size={17} color={C.muted} />
@@ -742,7 +744,7 @@ function HomeScreen({ user }) {
       <AllocationSheet show={allocOpen} onClose={() => setAllocOpen(false)} items={buildAllocItems(portfolio, companies)} />
 
       {/* Header */}
-      <div style={{ background: 'linear-gradient(160deg,#eafaf3,#ffffff)', padding: '52px 20px 20px' }}>
+      <div style={{ background: 'linear-gradient(160deg,var(--mintA),var(--surface))', padding: '52px 20px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
           <div>
             <div style={{ fontSize: 12, color: C.muted }}>Good day,</div>
@@ -758,14 +760,14 @@ function HomeScreen({ user }) {
         <div className="pressable" role="button" tabIndex={0} aria-label="View portfolio allocation"
           onClick={() => setAllocOpen(true)}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAllocOpen(true) } }}
-          style={{ background: '#ffffff', border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 18, boxShadow: '0 4px 20px rgba(15,23,32,0.06)', cursor: 'pointer' }}>
+          style={{ background: 'var(--surface)', border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 18, boxShadow: '0 4px 20px rgba(var(--shade),0.06)', cursor: 'pointer' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1 }}>TOTAL PORTFOLIO VALUE</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: C.goldBg, border: `1px solid ${C.goldBd}`, borderRadius: 99, padding: '4px 10px', fontSize: 10, fontWeight: 800, color: C.gold, flexShrink: 0 }}>
               <Icon name="pie" size={12} color={C.gold} /> View breakdown <span style={{ fontSize: 12, lineHeight: 1 }}>›</span>
             </div>
           </div>
-          <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 30, fontWeight: 800, color: '#0a7a52', margin: '6px 0 14px' }}>{fmt(totC)}</div>
+          <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 30, fontWeight: 800, color: 'var(--brandText)', margin: '6px 0 14px' }}>{fmt(totC)}</div>
           <div style={{ height: 1, background: C.border, marginBottom: 14 }} />
           <div style={{ display: 'flex', gap: 20 }}>
             {[['INVESTED', fmt(totI), C.text2], ['GAIN', (totG >= 0 ? '+' : '') + fmt(totG), gc(totG)], ['RETURN', pct(totGP), gc(totGP)]].map(([l, v, c]) => (
@@ -791,7 +793,7 @@ function HomeScreen({ user }) {
             const gp   = buy > 0 ? (g / buy) * 100 : 0
             return (
               <Card key={i} style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 11, background: '#eafaf3', border: '1px solid #00b38640', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon name="building" size={20} color={C.gold} /></div>
+                <div style={{ width: 42, height: 42, borderRadius: 11, background: 'var(--mintA)', border: '1px solid #00b38640', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon name="building" size={20} color={C.gold} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.companyName}</div>
                   <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{h.stake}% stake · {h.sector}</div>
@@ -811,7 +813,7 @@ function HomeScreen({ user }) {
           ? <Empty icon="inbox" title="No opportunities right now" sub="Check back soon" />
           : <div style={{ display: 'flex', gap: 12, overflowX: 'auto', marginLeft: -18, paddingLeft: 18, paddingRight: 18, paddingBottom: 8 }}>
             {companies.map(co => (
-              <div key={co.id} style={{ minWidth: 210, background: '#e6f7f0', border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 16, flexShrink: 0 }}>
+              <div key={co.id} style={{ minWidth: 210, background: 'var(--mintB)', border: `1px solid ${C.goldBd}`, borderRadius: 18, padding: 16, flexShrink: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6, gap: 6 }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: C.text, lineHeight: 1.3, flex: 1 }}>{co.name}</div>
                   <Badge label={co.risk} color={riskC[co.risk] || C.muted} />
@@ -836,7 +838,7 @@ function HomeScreen({ user }) {
       <Sheet show={!!investing} onClose={() => { setInvesting(null); setDone(false) }} title={done ? '' : 'Express Interest'}>
         {investing && !done && (
           <>
-            <Card style={{ marginBottom: 16, background: 'rgba(15,23,32,0.05)' }}>
+            <Card style={{ marginBottom: 16, background: 'rgba(var(--tint),0.05)' }}>
               <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 10 }}>{investing.name}</div>
               {[['Sector', investing.sector], ['Min Investment', fmt(investing.minInvest)], ['Valuation', fmtL(investing.currentValuation)], ['Expected Returns', investing.expectedReturns], ['Risk', investing.risk]].map(([l, v]) => (
                 <div key={l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
@@ -956,7 +958,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
 
   if (holding.sellAllowed === false) return (
     <div style={{ textAlign: 'center', padding: '14px 0 6px' }}>
-      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(15,23,32,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}><Icon name="lock" size={28} color={C.muted} /></div>
+      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(var(--tint),0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}><Icon name="lock" size={28} color={C.muted} /></div>
       <div style={{ fontSize: 16, fontWeight: 900, color: C.text, marginBottom: 6 }}>Selling not available</div>
       <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.7, marginBottom: 18 }}>{holding.companyName} is not open for sale right now. Please contact us if you have questions.</div>
       <Btn label="Close" onClick={onClose} full />
@@ -972,7 +974,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
             {['Sell Details', 'Bank Details', 'Review'].map((s, i) => (
               <div key={s} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
                 <div style={{ width: 26, height: 26, borderRadius: '50%',
-                  background: prog > i+1 ? C.green : prog === i+1 ? C.gold : 'rgba(15,23,32,0.07)',
+                  background: prog > i+1 ? C.green : prog === i+1 ? C.gold : 'rgba(var(--tint),0.07)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 10, fontWeight: 900, color: prog > i+1 ? '#ffffff' : prog === i+1 ? '#ffffff' : C.muted }}>
                   {prog > i+1 ? '✓' : i+1}
@@ -981,7 +983,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
               </div>
             ))}
           </div>
-          <div style={{ height: 3, background: 'rgba(15,23,32,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+          <div style={{ height: 3, background: 'rgba(var(--tint),0.06)', borderRadius: 99, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${((prog-1)/2)*100}%`, background: `linear-gradient(90deg,${C.gold},${C.goldL})`, borderRadius: 99, transition: 'width .4s' }} />
           </div>
         </div>
@@ -990,12 +992,12 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
       {/* STEP 1 — Sell Details */}
       {step === 'amount' && (
         <div>
-          <div style={{ background: 'linear-gradient(135deg,#eafaf3,#ffffff)', border: `1px solid ${C.goldBd}`, borderRadius: 14, padding: 16, marginBottom: 18 }}>
+          <div style={{ background: 'linear-gradient(135deg,var(--mintA),var(--surface))', border: `1px solid ${C.goldBd}`, borderRadius: 14, padding: 16, marginBottom: 18 }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 4 }}>{holding.companyName}</div>
             <div style={{ fontSize: 11, color: C.muted, marginBottom: 12 }}>{holding.sector} · {holding.stake}% total stake</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
               {[['Invested', fmt(invested), C.text2], ['Current', fmt(currVal), C.gold], ['P&L', (currVal-invested >= 0 ? '+' : '')+fmt(currVal-invested), gc(currVal-invested)]].map(([l,v,c]) => (
-                <div key={l} style={{ background: 'rgba(15,23,32,0.035)', borderRadius: 9, padding: '8px 10px' }}>
+                <div key={l} style={{ background: 'rgba(var(--tint),0.035)', borderRadius: 9, padding: '8px 10px' }}>
                   <div style={{ fontSize: 9, color: C.muted, textTransform: 'uppercase', marginBottom: 3 }}>{l}</div>
                   <div style={{ fontSize: 12, fontWeight: 800, color: c }}>{v}</div>
                 </div>
@@ -1010,7 +1012,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
                 const partialVal = ((holding.stake * p / 100) / 100) * (parseInt(askVal) || nowVal)
                 return (
                   <button key={p} onClick={() => setSellPct(p)}
-                    style={{ background: sellPct === p ? `linear-gradient(135deg,${C.red},${C.red}cc)` : 'rgba(15,23,32,0.06)',
+                    style={{ background: sellPct === p ? `linear-gradient(135deg,${C.red},${C.red}cc)` : 'rgba(var(--tint),0.06)',
                       border: `1.5px solid ${sellPct === p ? 'transparent' : C.border}`,
                       borderRadius: 10, padding: '12px 4px', cursor: 'pointer', fontFamily: 'inherit',
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
@@ -1020,7 +1022,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
                 )
               })}
             </div>
-            <div style={{ background: 'rgba(15,23,32,0.04)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', marginTop: 10, textAlign: 'center', fontSize: 12, color: C.muted }}>
+            <div style={{ background: 'rgba(var(--tint),0.04)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', marginTop: 10, textAlign: 'center', fontSize: 12, color: C.muted }}>
               Selling <strong style={{ color: C.gold }}>{sellPct}%</strong> of your stake
               {' · '}Est. payout <strong style={{ color: C.green }}>{fmt(((holding.stake * sellPct / 100) / 100) * (parseInt(askVal) || nowVal))}</strong>
             </div>
@@ -1037,7 +1039,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
                 <span style={{ fontSize: 11, fontWeight: 700, color: c }}>{v}</span>
               </div>
             ))}
-            <div style={{ height: 1, background: 'rgba(15,23,32,0.07)', margin: '10px 0' }} />
+            <div style={{ height: 1, background: 'rgba(var(--tint),0.07)', margin: '10px 0' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 12, fontWeight: 800, color: C.text }}>{gainLoss >= 0 ? 'Estimated Profit' : 'Estimated Loss'}</span>
               <span style={{ fontSize: 16, fontWeight: 900, color: gc(gainLoss) }}>{gainLoss >= 0 ? '+' : ''}{fmt(gainLoss)} ({gainLoss >= 0 ? '+' : ''}{gainPct.toFixed(1)}%)</span>
@@ -1061,17 +1063,17 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
             <span>Bank details are used only for payout. Account number is masked in our records.</span>
           </div>
 
-          <div style={{ background: 'rgba(15,23,32,0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
+          <div style={{ background: 'rgba(var(--tint),0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 12 }}>Account Holder</div>
             <Field label="Full Name (as per bank) *" value={bank.accountName}
               onChange={v => { setBank(b => ({...b, accountName:v})); setErrors(e => ({...e, accountName:null})) }}
               placeholder="Rahul Sharma" note={errors.accountName ? `⚠ ${errors.accountName}` : 'Must match bank account name exactly'} />
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10, color: '#5b665f', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Account Type *</div>
+              <div style={{ fontSize: 10, color: 'var(--label)', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Account Type *</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {['savings', 'current'].map(t => (
                   <button key={t} onClick={() => setBank(b => ({...b, accountType:t}))}
-                    style={{ flex: 1, background: bank.accountType === t ? `linear-gradient(135deg,${C.gold},${C.goldL})` : 'rgba(15,23,32,0.05)',
+                    style={{ flex: 1, background: bank.accountType === t ? `linear-gradient(135deg,${C.gold},${C.goldL})` : 'rgba(var(--tint),0.05)',
                       border: `1.5px solid ${bank.accountType === t ? 'transparent' : C.border}`,
                       borderRadius: 9, padding: 9, color: bank.accountType === t ? '#ffffff' : C.muted,
                       fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize' }}>{t}</button>
@@ -1080,7 +1082,7 @@ function SellFlow({ holding, nowVal, adminPhone, user, onClose, onSuccess }) {
             </div>
           </div>
 
-          <div style={{ background: 'rgba(15,23,32,0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
+          <div style={{ background: 'rgba(var(--tint),0.02)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="bank" size={14} /> Bank Account</div>
             <Field label="Bank Name *" value={bank.bankName}
               onChange={v => { setBank(b => ({...b, bankName:v})); setErrors(e => ({...e, bankName:null})) }}
@@ -1258,7 +1260,7 @@ function BuyMoreFlow({ holding, nowVal, adminPhone, user, onClose }) {
   return (
     <div>
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
-      <div style={{ background: 'linear-gradient(135deg,#eafaf3,#ffffff)', border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 14, marginBottom: 18 }}>
+      <div style={{ background: 'linear-gradient(135deg,var(--mintA),var(--surface))', border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: 14, marginBottom: 18 }}>
         <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 3 }}>{holding.companyName}</div>
         <div style={{ fontSize: 11, color: C.muted }}>Current stake: {holding.stake}% · Valuation: {fmtL(nowVal)}</div>
       </div>
@@ -1270,7 +1272,7 @@ function BuyMoreFlow({ holding, nowVal, adminPhone, user, onClose }) {
             const partialCost = ((holding.stake * p / 100) / 100) * nowVal
             return (
               <button key={p} onClick={() => setAddPct(p)}
-                style={{ background: addPct === p ? `linear-gradient(135deg,${C.green},${C.green}cc)` : 'rgba(15,23,32,0.06)',
+                style={{ background: addPct === p ? `linear-gradient(135deg,${C.green},${C.green}cc)` : 'rgba(var(--tint),0.06)',
                   border: `1.5px solid ${addPct === p ? 'transparent' : C.border}`,
                   borderRadius: 10, padding: '12px 4px', cursor: 'pointer', fontFamily: 'inherit',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
@@ -1352,7 +1354,7 @@ function PortfolioScreen({ user }) {
   if (loading) return <Loader />
 
   return (
-    <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(165deg,#e1f5ec 0%,#f4f8f6 42%,#e3edfb 100%)' }}>
+    <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(165deg,var(--pg1) 0%,var(--pg2) 42%,var(--pg3) 100%)' }}>
       {/* soft floating colour orbs behind the glass */}
       <div className="orbDrift" style={{ position: 'absolute', top: -60, right: -70, width: 250, height: 250, borderRadius: '50%', background: 'radial-gradient(circle,rgba(0,179,134,.40) 0%,transparent 68%)', filter: 'blur(30px)', pointerEvents: 'none' }} />
       <div className="orbDrift" style={{ position: 'absolute', top: '38%', left: -100, width: 270, height: 270, borderRadius: '50%', background: 'radial-gradient(circle,rgba(59,130,246,.28) 0%,transparent 68%)', filter: 'blur(32px)', pointerEvents: 'none', animationDelay: '-3s', animationDuration: '11s' }} />
@@ -1360,7 +1362,7 @@ function PortfolioScreen({ user }) {
 
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
 
-      <div className="glass" style={{ position: 'relative', zIndex: 2, flexShrink: 0, padding: '52px 18px 16px', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.7)', borderRadius: 0 }}>
+      <div className="glass" style={{ position: 'relative', zIndex: 2, flexShrink: 0, padding: '52px 18px 16px', border: 'none', borderBottom: '1px solid var(--glass-bd2)', borderRadius: 0 }}>
         <div style={{ fontSize: 24, fontWeight: 900, color: C.text }}>My Portfolio</div>
         <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{enriched.length} holdings · Tap a card to buy / sell</div>
       </div>
@@ -1372,7 +1374,7 @@ function PortfolioScreen({ user }) {
             onClick={() => setAllocOpen(true)}
             onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAllocOpen(true) } }}
             style={{ position: 'relative', borderRadius: 26, padding: 20, cursor: 'pointer' }}>
-            <div style={{ position: 'absolute', inset: 0, borderRadius: 26, background: 'linear-gradient(135deg,rgba(255,255,255,0.6) 0%,rgba(255,255,255,0) 55%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', inset: 0, borderRadius: 26, background: 'linear-gradient(135deg,var(--shine) 0%,rgba(255,255,255,0) 55%)', pointerEvents: 'none' }} />
             <div style={{ position: 'relative' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <div style={{ fontSize: 10, color: C.muted, letterSpacing: 1, fontWeight: 700 }}>TOTAL PORTFOLIO VALUE</div>
@@ -1380,7 +1382,7 @@ function PortfolioScreen({ user }) {
                   <Icon name="pie" size={12} color={C.gold} /> View breakdown <span style={{ fontSize: 12, lineHeight: 1 }}>›</span>
                 </div>
               </div>
-              <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 32, fontWeight: 800, color: '#0a7a52', margin: '8px 0 6px' }}>
+              <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 32, fontWeight: 800, color: 'var(--brandText)', margin: '8px 0 6px' }}>
                 <CountUp value={totC} format={fmt} />
               </div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: `${gc(totP)}18`, border: `1px solid ${gc(totP)}40`, borderRadius: 99, padding: '4px 10px', fontSize: 11, fontWeight: 800, color: gc(totP) }}>
@@ -1416,7 +1418,7 @@ function PortfolioScreen({ user }) {
                         <span style={{ fontSize: 12, color: C.text2, fontWeight: 600 }}>{sec}</span>
                         <span style={{ fontSize: 12, color: C.gold, fontWeight: 700 }}>{p.toFixed(1)}% · {fmt(val)}</span>
                       </div>
-                      <div style={{ height: 7, background: 'rgba(15,23,32,0.07)', borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{ height: 7, background: 'rgba(var(--tint),0.07)', borderRadius: 99, overflow: 'hidden' }}>
                         <div className="growX" style={{ height: '100%', width: `${p}%`, background: `linear-gradient(90deg,${C.gold},${C.goldL})`, borderRadius: 99 }} />
                       </div>
                     </div>
@@ -1438,10 +1440,10 @@ function PortfolioScreen({ user }) {
             <div key={i} className={enriched.length <= 6 ? 'bounceFloat' : 'bounceIn'} style={{ marginBottom: 16, ...stagger(i, 0.15) }}>
               {/* Card */}
               <div className="glass pressable" onClick={() => setSelected(isOpen ? null : i)}
-                style={{ position: 'relative', background: isOpen ? 'rgba(255,255,255,0.74)' : undefined, border: `1px solid ${isOpen ? C.goldBd : 'rgba(255,255,255,0.78)'}`, borderRadius: isOpen ? '24px 24px 0 0' : 24, padding: 16, cursor: 'pointer', boxShadow: `0 10px 32px ${gc(h.g)}22, inset 0 1px 0 rgba(255,255,255,0.9)` }}>
+                style={{ position: 'relative', background: isOpen ? 'var(--glass-open)' : undefined, border: `1px solid ${isOpen ? C.goldBd : 'var(--glass-bd)'}`, borderRadius: isOpen ? '24px 24px 0 0' : 24, padding: 16, cursor: 'pointer', boxShadow: `0 10px 32px ${gc(h.g)}22, inset 0 1px 0 var(--hi)` }}>
                 <div style={{ position: 'absolute', left: 18, right: 18, top: 0, height: 3, borderRadius: '0 0 6px 6px', background: `linear-gradient(90deg,transparent,${gc(h.g)},transparent)`, opacity: 0.55, pointerEvents: 'none' }} />
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 14, background: 'linear-gradient(135deg,#dff7ec,#ffffff)', border: '1px solid rgba(0,179,134,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 14px rgba(0,179,134,0.18)' }}><Icon name="building" size={22} color={C.gold} /></div>
+                  <div style={{ width: 46, height: 46, borderRadius: 14, background: 'linear-gradient(135deg,var(--mintC),var(--surface))', border: '1px solid rgba(0,179,134,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 14px rgba(0,179,134,0.18)' }}><Icon name="building" size={22} color={C.gold} /></div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>{h.companyName}</div>
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{h.sector}</div>
@@ -1499,7 +1501,7 @@ function PortfolioScreen({ user }) {
 
               {/* Action panel */}
               {isOpen && (
-                <div className="glass panelIn" style={{ background: 'rgba(255,255,255,0.7)', border: `1px solid ${C.goldBd}`, borderTop: 'none', borderRadius: '0 0 24px 24px', padding: 16 }}>
+                <div className="glass panelIn" style={{ background: 'var(--glass-panel)', border: `1px solid ${C.goldBd}`, borderTop: 'none', borderRadius: '0 0 24px 24px', padding: 16 }}>
                   <div style={{ fontSize: 11, color: C.muted, marginBottom: 12, textAlign: 'center' }}>
                     What would you like to do with <strong style={{ color: C.text }}>{h.companyName}</strong>?
                   </div>
@@ -1513,7 +1515,7 @@ function PortfolioScreen({ user }) {
                       </button>
                     ) : (
                       <button className="tap" onClick={() => setLegalDoc('terms')}
-                        style={{ background: 'rgba(15,23,32,0.05)', border: `1.5px solid ${C.border}`, borderRadius: 16, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                        style={{ background: 'rgba(var(--tint),0.05)', border: `1.5px solid ${C.border}`, borderRadius: 16, padding: '14px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                         <Icon name="lock" size={22} color={C.muted} />
                         <div style={{ fontSize: 13, fontWeight: 900, color: C.muted }}>Selling not available</div>
                         <div style={{ fontSize: 9, color: C.muted, textAlign: 'center', lineHeight: 1.4 }}>Not open for sale right now. Tap to see why.</div>
@@ -1582,12 +1584,12 @@ function NewsScreen() {
       <div style={{ display: 'flex', gap: 8, padding: '12px 18px', overflowX: 'auto', flexShrink: 0, borderBottom: `1px solid ${C.border}` }}>
         {filters.map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            style={{ flexShrink: 0, background: filter === f ? `linear-gradient(90deg,${C.gold},${C.goldL})` : 'rgba(15,23,32,0.05)', border: filter === f ? 'none' : `1px solid ${C.border}`, borderRadius: 20, padding: '6px 14px', fontSize: 11, fontWeight: 700, color: filter === f ? '#ffffff' : C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>{f}</button>
+            style={{ flexShrink: 0, background: filter === f ? `linear-gradient(90deg,${C.gold},${C.goldL})` : 'rgba(var(--tint),0.05)', border: filter === f ? 'none' : `1px solid ${C.border}`, borderRadius: 20, padding: '6px 14px', fontSize: 11, fontWeight: 700, color: filter === f ? '#ffffff' : C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>{f}</button>
         ))}
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
         {list.map((n, i) => (
-          <Card key={n.id} style={{ marginBottom: 12, background: i === 0 ? '#e6f7f0' : C.card }}>
+          <Card key={n.id} style={{ marginBottom: 12, background: i === 0 ? 'var(--mintB)' : C.card }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <Badge label={n.tag} color={n.color} />
@@ -1647,7 +1649,7 @@ function ProfileScreen({ user }) {
 
         {/* Welcome note */}
         {user.welcomeNote && (
-          <Card style={{ marginBottom: 14, background: '#e6f7f0', border: `1px solid ${C.goldBd}` }}>
+          <Card style={{ marginBottom: 14, background: 'var(--mintB)', border: `1px solid ${C.goldBd}` }}>
             <div style={{ fontSize: 10, color: C.gold, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="mail" size={12} color={C.gold} /> Note from Anand Finco</div>
             <div style={{ fontSize: 13, color: C.text2, lineHeight: 1.7, fontStyle: 'italic' }}>"{user.welcomeNote}"</div>
           </Card>
@@ -1821,7 +1823,7 @@ function AdminCompanies() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 7, marginLeft: 8 }}>
-                <button onClick={() => startEdit(co)} style={{ background: 'rgba(15,23,32,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '6px 9px', cursor: 'pointer', display: 'flex' }}><Icon name="edit" size={15} color={C.muted} /></button>
+                <button onClick={() => startEdit(co)} style={{ background: 'rgba(var(--tint),0.06)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '6px 9px', cursor: 'pointer', display: 'flex' }}><Icon name="edit" size={15} color={C.muted} /></button>
                 <button onClick={() => setConfirm({ id: co.id, msg: `Delete "${co.name}"? This is permanent.` })} style={{ background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 8, padding: '6px 9px', cursor: 'pointer', display: 'flex' }}><Icon name="trash" size={15} color={C.red} /></button>
               </div>
             </div>
@@ -1839,7 +1841,7 @@ function AdminCompanies() {
               <div style={{ display: 'flex', gap: 8 }}>
                 <input value={valMap[co.id] || ''} onChange={e => setValMap(p => ({ ...p, [co.id]: e.target.value }))}
                   placeholder={`New value (now: ${fmtL(co.currentValuation)})`} type="number"
-                  style={{ flex: 1, background: 'rgba(15,23,32,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 10px', color: C.text, fontSize: 12, outline: 'none', fontFamily: 'inherit' }} />
+                  style={{ flex: 1, background: 'rgba(var(--tint),0.06)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 10px', color: C.text, fontSize: 12, outline: 'none', fontFamily: 'inherit' }} />
                 <Btn label="Update" onClick={() => updateVal(co)} sm />
               </div>
             </div>
@@ -1925,7 +1927,7 @@ function AdminNotifications() {
             {unread > 0 ? `${unread} new unread` : 'All caught up ✓'}
           </div>
         </div>
-        <button onClick={load} style={{ background: 'rgba(15,23,32,0.05)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="refresh" size={13} color={C.muted} /> Refresh</button>
+        <button onClick={load} style={{ background: 'rgba(var(--tint),0.05)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="refresh" size={13} color={C.muted} /> Refresh</button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
         {loading && <Loader />}
@@ -2037,7 +2039,7 @@ function AdminPortfolios() {
       <Toast msg={toast?.m} type={toast?.t} onDone={() => setToast(null)} />
       <Confirm msg={confirm?.msg} onYes={removeHolding} onNo={() => setConfirm(null)} />
       <div style={{ background: C.bg2, padding: '52px 18px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-        <button onClick={() => setSelected(null)} style={{ background: 'rgba(15,23,32,0.06)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+        <button onClick={() => setSelected(null)} style={{ background: 'rgba(var(--tint),0.06)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>{selected.name}</div>
           <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{holdings.length} holdings</div>
@@ -2072,11 +2074,11 @@ function AdminPortfolios() {
       </div>
       <Sheet show={sheet} onClose={() => setSheet(false)} title={`Add Holding — ${selected.name}`}>
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 10, color: '#5b665f', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Select Company *</div>
+          <div style={{ fontSize: 10, color: 'var(--label)', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Select Company *</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {companies.map(c => (
               <button key={c.id} onClick={() => { sf('companyId')(c.id); sf('buyValuation')(String(c.currentValuation)) }}
-                style={{ background: form.companyId === c.id ? C.gold : 'rgba(15,23,32,0.05)', border: `1px solid ${form.companyId === c.id ? C.gold : C.border}`, borderRadius: 20, padding: '6px 13px', fontSize: 11, fontWeight: 700, color: form.companyId === c.id ? '#ffffff' : C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>{c.name}</button>
+                style={{ background: form.companyId === c.id ? C.gold : 'rgba(var(--tint),0.05)', border: `1px solid ${form.companyId === c.id ? C.gold : C.border}`, borderRadius: 20, padding: '6px 13px', fontSize: 11, fontWeight: 700, color: form.companyId === c.id ? '#ffffff' : C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>{c.name}</button>
             ))}
           </div>
         </div>
@@ -2144,7 +2146,7 @@ function AdminSellRequests() {
           <div style={{ fontSize: 22, fontWeight: 900, color: C.text }}>Sell Requests</div>
           <div style={{ fontSize: 11, color: unread > 0 ? C.red : C.muted, marginTop: 2 }}>{unread > 0 ? `${unread} new pending` : 'All reviewed ✓'}</div>
         </div>
-        <button onClick={load} style={{ background: 'rgba(15,23,32,0.05)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="refresh" size={13} color={C.muted} /> Refresh</button>
+        <button onClick={load} style={{ background: 'rgba(var(--tint),0.05)', border: `1px solid ${C.border}`, borderRadius: 9, padding: '7px 13px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="refresh" size={13} color={C.muted} /> Refresh</button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 40px' }}>
         {reqs.length === 0 && <Empty icon="inbox" title="No sell requests" sub="When clients submit sell requests, they appear here." />}
@@ -2160,7 +2162,7 @@ function AdminSellRequests() {
                 </div>
                 <Badge label="SELL REQUEST" color={C.red} />
               </div>
-              <div style={{ background: 'rgba(15,23,32,0.035)', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
+              <div style={{ background: 'rgba(var(--tint),0.035)', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {[['Company', r.companyName || '—'], ['Selling', `${r.sellPercent}% of stake`], ['Asking Val.', fmtL(r.askingValuation)], ['Exp. Payout', fmt(r.expectedPayout)], ['P&L', `${r.gainLoss >= 0 ? '+' : ''}${fmt(r.gainLoss)}`], ['Date', r.timestamp?.toDate?.()?.toLocaleDateString('en-IN') || '—']].map(([l, v]) => (
                     <div key={l}>
@@ -2293,7 +2295,7 @@ function AdminClients() {
                 <button onClick={() => openWA(c)} style={{ background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.3)', borderRadius: 10, padding: '8px 11px', cursor: 'pointer', flexShrink: 0, display: 'flex' }}><Icon name="chat" size={17} color="#128C7E" /></button>
               )}
             </div>
-            {c.welcomeNote && <div style={{ fontSize: 11, color: C.muted, marginTop: 10, padding: '8px 12px', background: 'rgba(15,23,32,0.03)', borderRadius: 8, fontStyle: 'italic' }}>"{c.welcomeNote}"</div>}
+            {c.welcomeNote && <div style={{ fontSize: 11, color: C.muted, marginTop: 10, padding: '8px 12px', background: 'rgba(var(--tint),0.03)', borderRadius: 8, fontStyle: 'italic' }}>"{c.welcomeNote}"</div>}
           </Card>
         ))}
       </div>
@@ -2368,8 +2370,8 @@ function AdminSettings({ user }) {
         <Card style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 7 }}><Icon name="lock" size={15} /> Firestore Security Rules</div>
           <div style={{ fontSize: 12, color: C.muted, marginBottom: 12 }}>Copy-paste in Firebase Console → Firestore → Rules tab:</div>
-          <div style={{ background: 'rgba(15,23,32,0.04)', borderRadius: 10, padding: 14, border: `1px solid rgba(15,23,32,0.06)` }}>
-            <pre style={{ fontSize: 9, color: '#0a6b4a', lineHeight: 1.7, whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{`rules_version = '2';
+          <div style={{ background: 'rgba(var(--tint),0.04)', borderRadius: 10, padding: 14, border: `1px solid rgba(var(--tint),0.06)` }}>
+            <pre style={{ fontSize: 9, color: 'var(--code)', lineHeight: 1.7, whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{`rules_version = '2';
 service cloud.firestore {
   match /databases/{db}/documents {
     match /companies/{id} {
@@ -2659,7 +2661,7 @@ function LegalSheet({ show, doc, onClose }) {
     <div onClick={onClose} role="presentation"
       style={{ position: 'fixed', inset: 0, background: 'rgba(8,20,16,0.6)', zIndex: 400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <div role="dialog" aria-modal="true" aria-label="Legal" onClick={e => e.stopPropagation()}
-        style={{ width: '100%', maxWidth: 430, height: '90dvh', background: C.bg2, borderTopLeftRadius: 24, borderTopRightRadius: 24, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 -8px 40px rgba(15,23,32,0.2)' }}>
+        style={{ width: '100%', maxWidth: 430, height: '90dvh', background: C.bg2, borderTopLeftRadius: 24, borderTopRightRadius: 24, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 -8px 40px rgba(var(--shade),0.2)' }}>
         <div style={{ padding: '14px 18px 10px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ display: 'flex', gap: 4, background: C.bg3, borderRadius: 12, padding: 3 }}>
@@ -2670,7 +2672,7 @@ function LegalSheet({ show, doc, onClose }) {
               ))}
             </div>
             <button onClick={onClose} aria-label="Close legal"
-              style={{ background: 'rgba(15,23,32,0.07)', border: 'none', borderRadius: 8, width: 30, height: 30, color: C.muted, fontSize: 17, cursor: 'pointer', fontFamily: 'inherit' }}>×</button>
+              style={{ background: 'rgba(var(--tint),0.07)', border: 'none', borderRadius: 8, width: 30, height: 30, color: C.muted, fontSize: 17, cursor: 'pointer', fontFamily: 'inherit' }}>×</button>
           </div>
         </div>
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain', padding: '4px 20px 28px' }}>
@@ -2693,7 +2695,7 @@ function LegalPage({ doc }) {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: C.bg2 }}>
       <div style={{ padding: '22px 18px 12px', flexShrink: 0, borderBottom: `1px solid ${C.border}` }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 18, fontWeight: 800, color: '#0a7a52' }}>{LEGAL.company}</div>
+          <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 18, fontWeight: 800, color: 'var(--brandText)' }}>{LEGAL.company}</div>
           <a href="/" style={{ fontSize: 11, fontWeight: 800, color: C.gold, textDecoration: 'none' }}>← Back to app</a>
         </div>
         <div style={{ display: 'flex', gap: 4, background: C.bg3, borderRadius: 12, padding: 3, marginTop: 12, width: 'fit-content' }}>
