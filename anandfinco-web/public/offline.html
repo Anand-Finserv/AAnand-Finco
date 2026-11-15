@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <meta name="theme-color" content="#ffffff"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"/>
+  <meta name="theme-color" content="#121c18" media="(prefers-color-scheme: dark)"/>
   <title>Anand Finco – Offline</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
@@ -16,6 +18,7 @@
     h1{font-size:20px;margin-bottom:8px}
     p{font-size:14px;color:#6b7670;line-height:1.6;margin-bottom:22px}
     button{width:100%;border:0;border-radius:12px;padding:14px;background:#00b386;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+    @media (prefers-color-scheme:dark){body{background:#0b1210;color:#e9f2ee}.card{background:#141f1b;border-color:rgba(255,255,255,.10);box-shadow:none}p{color:#8fa198}}
   </style>
 </head>
 <body>
