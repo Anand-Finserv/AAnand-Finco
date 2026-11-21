@@ -74,8 +74,10 @@ select option{background:${C.bg2}}
 .panelIn{animation:panelIn .28s ease backwards}
 .orbDrift{animation:orbDrift 9s ease-in-out infinite}
 .growX{transform-origin:left center;animation:growX .9s cubic-bezier(.22,1,.36,1) .25s backwards}
+@keyframes pinShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
+.pinShake{animation:pinShake .38s ease}
 @supports not (-webkit-backdrop-filter:blur(1px)){@supports not (backdrop-filter:blur(1px)){.glass{background:var(--glass-fallback)}}}
-@media (prefers-reduced-motion:reduce){.bounceIn,.bounceFloat,.sheetUp,.panelIn,.orbDrift,.growX,.orb1,.orb2{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.bounceIn,.bounceFloat,.sheetUp,.panelIn,.orbDrift,.growX,.pinShake,.orb1,.orb2{animation:none!important}}
 `
 function InjectCSS() {
   useEffect(() => {
@@ -613,7 +615,8 @@ function LoginScreen() {
     setLoad(true); setError('')
     try {
       const email = un.trim().toLowerCase() === 'admin' ? ADMIN_EMAIL : `${un.trim().toLowerCase()}@anandfinco.com`
-      await signInWithEmailAndPassword(auth, email, pw)
+      const cred = await signInWithEmailAndPassword(auth, email, pw)
+      try { pinTouch(cred && cred.user && cred.user.uid) } catch (e2) { /* ignore */ }
     } catch (e) {
       const map = {
         'auth/invalid-credential':   'Wrong username or password.',
@@ -1618,6 +1621,7 @@ function ProfileScreen({ user }) {
   const [saving, setSave]   = useState(false)
   const [toast, setToast]   = useState(null)
   const [legal, setLegal]   = useState(null)
+  const [pinSheet, setPinSheet] = useState(false)
 
   async function savePan() {
     const v = pan.toUpperCase()
@@ -1699,6 +1703,19 @@ function ProfileScreen({ user }) {
           }
         </Card>
 
+        {pinHas(user.uid) && (
+          <Card style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: C.muted, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Security</div>
+            {[['pin', 'Change PIN', 'lock'], ['lock', 'Lock app now', 'shield']].map(([id, label, icon], i) => (
+              <button key={id} onClick={() => (id === 'pin' ? setPinSheet(true) : window.dispatchEvent(new Event('af-pin-lock')))}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', borderTop: i ? `1px solid ${C.border}` : 'none', padding: '13px 0', cursor: 'pointer', fontFamily: 'inherit', color: C.text }}>
+                <div style={{ width: 34, height: 34, borderRadius: 10, background: C.goldBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon name={icon} size={16} color={C.gold} /></div>
+                <span style={{ flex: 1, textAlign: 'left', fontSize: 13, fontWeight: 600 }}>{label}</span>
+                <span style={{ color: C.muted, fontSize: 18, lineHeight: 1 }}>›</span>
+              </button>
+            ))}
+          </Card>
+        )}
         <Card style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 11, color: C.muted, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Legal</div>
           {[['terms', 'Terms & Conditions', 'clipboard'], ['privacy', 'Privacy Policy', 'shield']].map(([id, label, icon], i) => (
@@ -1711,6 +1728,7 @@ function ProfileScreen({ user }) {
           ))}
         </Card>
         <LegalSheet show={!!legal} doc={legal || 'terms'} onClose={() => setLegal(null)} />
+        <ChangePinSheet show={pinSheet} uid={user.uid} onClose={() => setPinSheet(false)} onDone={() => setToast({ m: 'PIN changed' })} />
 
         <button onClick={() => signOut(auth)}
           style={{ width: '100%', background: C.redBg, border: `1px solid ${C.red}44`, borderRadius: 14, padding: 15, color: C.red, fontWeight: 800, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit' }}>
@@ -2710,6 +2728,265 @@ function LegalPage({ doc }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PIN LOCK — 4-digit app lock for clients
+//  · The client chooses the PIN after logging in. It is stored ONLY on that device,
+//    as a salted hash (the PIN itself is never saved or sent anywhere).
+//  · The PIN is asked again after 30 minutes without using the app.
+//  · 5 wrong tries → signed out (the client must log in with the password again).
+// To change the 30 minutes, edit PIN_IDLE_MS below.
+// ─────────────────────────────────────────────────────────────────────────────
+const PIN_IDLE_MS   = 30 * 60 * 1000
+const PIN_MAX_TRIES = 5
+
+const pinStore = {
+  ok()      { try { const k = 'af:pin:probe'; window.localStorage.setItem(k, '1'); window.localStorage.removeItem(k); return true } catch (e) { return false } },
+  get(k)    { try { return window.localStorage.getItem(k) } catch (e) { return null } },
+  set(k, v) { try { window.localStorage.setItem(k, String(v)); return true } catch (e) { return false } },
+  del(k)    { try { window.localStorage.removeItem(k) } catch (e) { /* ignore */ } },
+}
+const pinKey   = (uid, what) => `af:pin:${what}:${uid}`
+const pinHas   = uid => !!pinStore.get(pinKey(uid, 'cred'))
+const pinTouch = uid => { if (uid) pinStore.set(pinKey(uid, 'last'), Date.now()) }
+const pinFresh = uid => {
+  const t = Number(pinStore.get(pinKey(uid, 'last'))), n = Date.now()
+  return Number.isFinite(t) && t > 0 && n >= t && n - t < PIN_IDLE_MS     // n < t means the clock was moved back → treat as expired
+}
+const pinClear = uid => ['cred', 'last', 'fails'].forEach(w => pinStore.del(pinKey(uid, w)))
+
+const toHex = bytes => Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('')
+function randomSalt() {
+  const a = new Uint8Array(16)
+  try { (window.crypto || globalThis.crypto).getRandomValues(a) } catch (e) { for (let i = 0; i < 16; i++) a[i] = Math.floor(Math.random() * 256) }
+  return toHex(a)
+}
+async function pinHash(pin, salt, forceFallback) {
+  const subtle = (window.crypto && window.crypto.subtle) || (globalThis.crypto && globalThis.crypto.subtle)
+  if (subtle && !forceFallback) {
+    const enc  = new TextEncoder()
+    const key  = await subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveBits'])
+    const bits = await subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(salt), iterations: 100000 }, key, 256)
+    return 'p1:' + toHex(new Uint8Array(bits))
+  }
+  // fallback for very old browsers / non-secure pages (still salted)
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57
+  const s = salt + ':' + pin
+  for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677) }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return 'f1:' + (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0')
+}
+async function pinSave(uid, pin) {
+  const salt = randomSalt()
+  const hash = await pinHash(pin, salt)
+  return pinStore.set(pinKey(uid, 'cred'), JSON.stringify({ v: 1, salt, hash }))
+}
+async function pinCheck(uid, pin) {
+  try {
+    const cred = JSON.parse(pinStore.get(pinKey(uid, 'cred')) || 'null')
+    if (!cred || !cred.hash) return false
+    return (await pinHash(pin, cred.salt, String(cred.hash).startsWith('f1:'))) === cred.hash
+  } catch (e) { return false }
+}
+// counts a wrong try; returns { out: true } when the limit is reached (caller signs the client out)
+function pinFail(uid) {
+  const n = (Number(pinStore.get(pinKey(uid, 'fails'))) || 0) + 1
+  if (n >= PIN_MAX_TRIES) { pinClear(uid); return { out: true, left: 0 } }
+  pinStore.set(pinKey(uid, 'fails'), n)
+  return { out: false, left: PIN_MAX_TRIES - n }
+}
+const pinWrongText = left => `Wrong PIN. ${left} ${left === 1 ? 'try' : 'tries'} left.`
+
+// number pad + 4 dots
+function PinPad({ onComplete, resetKey = 0, disabled = false }) {
+  const [pin, setPin] = useState('')
+  const pinRef  = useRef('')
+  const timer   = useRef(null)
+  const doneRef = useRef(onComplete)
+  doneRef.current = onComplete
+
+  useEffect(() => { pinRef.current = ''; setPin('') }, [resetKey])
+  useEffect(() => () => clearTimeout(timer.current), [])
+
+  const push = d => {
+    if (disabled || pinRef.current.length >= 4) return
+    const next = pinRef.current + d
+    pinRef.current = next; setPin(next)
+    if (next.length === 4) { clearTimeout(timer.current); timer.current = setTimeout(() => doneRef.current(next), 140) }
+  }
+  const back = () => {
+    if (disabled || pinRef.current.length >= 4) return
+    pinRef.current = pinRef.current.slice(0, -1); setPin(pinRef.current)
+  }
+  useEffect(() => {
+    const onKey = e => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+      if (/^[0-9]$/.test(e.key)) push(e.key)
+      else if (e.key === 'Backspace') back()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
+
+  return (
+    <div>
+      <div role="img" aria-label={`${pin.length} of 4 digits entered`} style={{ display: 'flex', justifyContent: 'center', gap: 16, margin: '8px 0 26px' }}>
+        {[0, 1, 2, 3].map(i => (
+          <div key={i} style={{ width: 16, height: 16, borderRadius: '50%', border: `2px solid ${i < pin.length ? C.gold : C.dim}`,
+            background: i < pin.length ? C.gold : 'transparent', transform: i < pin.length ? 'scale(1.12)' : 'scale(1)', transition: 'all .15s' }} />
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,72px)', gap: 14, justifyContent: 'center' }}>
+        {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'].map((k, i) => k === '' ? <div key={i} /> : (
+          <button key={i} type="button" className="glassSoft tap" aria-label={k === '⌫' ? 'Delete' : `Digit ${k}`}
+            onClick={() => (k === '⌫' ? back() : push(k))}
+            style={{ width: 72, height: 72, borderRadius: '50%', fontSize: k === '⌫' ? 22 : 26, fontWeight: 700, color: C.text, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>{k}</button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PinScreen({ title, subtitle, error, resetKey, busy, onComplete, footer }) {
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 24px 32px', background: C.bg }}>
+      <div className="orb1" style={{ position: 'absolute', top: '6%', left: '-12%', width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(circle,rgba(0,179,134,0.20) 0%,transparent 70%)', filter: 'blur(30px)', pointerEvents: 'none' }} />
+      <div className="orb2" style={{ position: 'absolute', bottom: '8%', right: '-14%', width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle,rgba(59,130,246,0.16) 0%,transparent 70%)', filter: 'blur(34px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 340, textAlign: 'center' }}>
+        <div style={{ width: 60, height: 60, borderRadius: 18, background: `linear-gradient(135deg,${C.gold},${C.goldL})`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28, color: '#ffffff', boxShadow: `0 10px 30px ${C.gold}40` }}>₹</div>
+        <div style={{ fontSize: 20, fontWeight: 900, color: C.text }}>{title}</div>
+        <div style={{ fontSize: 12, color: C.muted, marginTop: 6, lineHeight: 1.6, minHeight: 38 }}>{subtitle}</div>
+        <div key={resetKey} className={error ? 'pinShake' : undefined}>
+          <PinPad onComplete={onComplete} resetKey={resetKey} disabled={busy} />
+        </div>
+        <div role="alert" style={{ minHeight: 22, marginTop: 16, fontSize: 12, fontWeight: 700, color: C.red }}>{error}</div>
+        {footer}
+      </div>
+    </div>
+  )
+}
+
+// Wraps the client app: create PIN (first time) → ask PIN when opening → lock after 30 idle minutes
+function PinGate({ user, children }) {
+  const uid = user && user.uid
+  const [usable]  = useState(() => !!uid && pinStore.ok())       // if the phone blocks storage we do not lock people out
+  const [phase, setPhase] = useState(() => (!usable ? 'open' : pinHas(uid) ? (pinFresh(uid) ? 'open' : 'locked') : 'setup'))
+  const [firstPin, setFirstPin] = useState('')
+  const [error, setError]   = useState('')
+  const [resetKey, setResetKey] = useState(0)
+  const [busy, setBusy]     = useState(false)
+  const [forgot, setForgot] = useState(false)
+
+  // while the app is open: note activity, and lock after PIN_IDLE_MS without any
+  useEffect(() => {
+    if (!usable || phase !== 'open') return
+    pinTouch(uid)
+    let lastWrite = Date.now()
+    const check    = () => { if (!pinFresh(uid)) { setError(''); setPhase('locked') } }
+    const activity = () => { const n = Date.now(); if (n - lastWrite > 5000) { lastWrite = n; pinTouch(uid) } }
+    const onVis    = () => { if (document.visibilityState === 'hidden') pinTouch(uid); else check() }
+    const lockNow  = () => { pinStore.del(pinKey(uid, 'last')); setError(''); setPhase('locked') }
+    const iv  = setInterval(check, 15000)
+    const evs = ['pointerdown', 'keydown', 'touchstart', 'scroll']
+    evs.forEach(ev => window.addEventListener(ev, activity, true))
+    document.addEventListener('visibilitychange', onVis)
+    window.addEventListener('pageshow', check)
+    window.addEventListener('focus', check)
+    window.addEventListener('af-pin-lock', lockNow)
+    return () => {
+      clearInterval(iv)
+      evs.forEach(ev => window.removeEventListener(ev, activity, true))
+      document.removeEventListener('visibilitychange', onVis)
+      window.removeEventListener('pageshow', check)
+      window.removeEventListener('focus', check)
+      window.removeEventListener('af-pin-lock', lockNow)
+    }
+  }, [phase, usable, uid])
+
+  async function handleComplete(pin) {
+    if (phase === 'setup') { setFirstPin(pin); setError(''); setPhase('setup2'); setResetKey(k => k + 1); return }
+    if (phase === 'setup2') {
+      if (pin !== firstPin) { setFirstPin(''); setError("PINs didn't match. Please start again."); setPhase('setup'); setResetKey(k => k + 1); return }
+      setBusy(true)
+      await pinSave(uid, pin)                                      // if saving fails we still let the client in
+      setBusy(false)
+      pinStore.del(pinKey(uid, 'fails')); setError(''); setPhase('open')
+      return
+    }
+    setBusy(true)
+    const ok = await pinCheck(uid, pin)
+    setBusy(false)
+    if (ok) { pinStore.del(pinKey(uid, 'fails')); setError(''); setPhase('open'); return }
+    const f = pinFail(uid)
+    if (f.out) { try { await signOut(auth) } catch (e) { /* ignore */ } return }
+    setError(pinWrongText(f.left)); setResetKey(k => k + 1)
+  }
+
+  if (!usable || phase === 'open') return <>{children}</>
+
+  const first = String((user && user.name) || '').split(' ')[0]
+  const text = phase === 'setup'  ? ['Create your PIN',  'Choose a 4-digit PIN. You will use it to open the app on this phone.']
+             : phase === 'setup2' ? ['Confirm your PIN', 'Enter the same 4 digits again.']
+             :                      [`Welcome back${first ? ', ' + first : ''}`, 'Enter your 4-digit PIN to continue.']
+  const linkBtn = { background: 'none', border: 'none', color: C.gold, fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', marginTop: 6 }
+  return (
+    <>
+      <PinScreen title={text[0]} subtitle={text[1]} error={error} resetKey={resetKey} busy={busy} onComplete={handleComplete}
+        footer={phase === 'locked'
+          ? <button onClick={() => setForgot(true)} style={linkBtn}>Forgot PIN?</button>
+          : phase === 'setup2'
+          ? <button onClick={() => { setFirstPin(''); setError(''); setPhase('setup'); setResetKey(k => k + 1) }} style={linkBtn}>Start over</button>
+          : null} />
+      <Confirm msg={forgot ? 'Forgot your PIN? You will be signed out. Log in with your password and you can set a new PIN.' : null}
+        onYes={async () => { setForgot(false); pinClear(uid); try { await signOut(auth) } catch (e) { /* ignore */ } }}
+        onNo={() => setForgot(false)} />
+    </>
+  )
+}
+
+// Profile → Security → Change PIN
+function ChangePinSheet({ show, uid, onClose, onDone }) {
+  const [step, setStep]   = useState('current')     // current → fresh → again
+  const [fresh, setFresh] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy]   = useState(false)
+  const [resetKey, setResetKey] = useState(0)
+
+  useEffect(() => { if (show) { setStep('current'); setFresh(''); setError(''); setBusy(false); setResetKey(k => k + 1) } }, [show])
+  if (!show) return null
+
+  async function done(pin) {
+    if (step === 'current') {
+      setBusy(true); const ok = await pinCheck(uid, pin); setBusy(false)
+      if (ok) { pinStore.del(pinKey(uid, 'fails')); setStep('fresh'); setError(''); setResetKey(k => k + 1); return }
+      const f = pinFail(uid)
+      if (f.out) { try { await signOut(auth) } catch (e) { /* ignore */ } return }
+      setError(pinWrongText(f.left)); setResetKey(k => k + 1); return
+    }
+    if (step === 'fresh') { setFresh(pin); setStep('again'); setError(''); setResetKey(k => k + 1); return }
+    if (pin !== fresh) { setFresh(''); setStep('fresh'); setError("PINs didn't match. Try again."); setResetKey(k => k + 1); return }
+    setBusy(true); const saved = await pinSave(uid, pin); setBusy(false)
+    if (!saved) { setError('Could not save the PIN on this phone.'); setResetKey(k => k + 1); return }
+    pinTouch(uid); if (onDone) onDone(); onClose()
+  }
+  const text = step === 'current' ? ['Enter your current PIN', 'To change your PIN, first confirm the one you use now.']
+             : step === 'fresh'   ? ['Choose a new PIN', 'Pick any 4 digits you will remember.']
+             :                      ['Confirm your new PIN', 'Enter the same 4 digits again.']
+  return (
+    <Sheet show={show} onClose={onClose} title="Change PIN">
+      <div style={{ textAlign: 'center', padding: '4px 0 10px' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{text[0]}</div>
+        <div style={{ fontSize: 11, color: C.muted, margin: '4px 0 6px', minHeight: 30 }}>{text[1]}</div>
+        <div key={resetKey} className={error ? 'pinShake' : undefined}>
+          <PinPad onComplete={done} resetKey={resetKey} disabled={busy} />
+        </div>
+        <div role="alert" style={{ minHeight: 20, marginTop: 14, fontSize: 12, fontWeight: 700, color: C.red }}>{error}</div>
+      </div>
+    </Sheet>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ROOT
 // ─────────────────────────────────────────────────────────────────────────────
 function AppMain() {
@@ -2745,7 +3022,9 @@ function AppMain() {
           ? <LoginScreen />
           : profile?.isAdmin
           ? <AdminApp user={profile} />
-          : <ClientApp user={profile || { uid: user.uid, email: user.email, isAdmin: false }} />
+          : <PinGate key={(profile || user).uid} user={profile || { uid: user.uid, email: user.email, isAdmin: false }}>
+              <ClientApp user={profile || { uid: user.uid, email: user.email, isAdmin: false }} />
+            </PinGate>
         }
       </Shell>
     </>
